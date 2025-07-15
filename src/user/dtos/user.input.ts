@@ -11,3 +11,6 @@ export class CreateUserInput extends PickType(User, [
   'password',
   'gender',
 ]) {}
+
+@InputType()
+export class GetUserInput extends PickType(User, ['_id']) {}
