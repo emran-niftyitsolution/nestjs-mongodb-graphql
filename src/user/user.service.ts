@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { PaginateModel, Types } from 'mongoose';
 import {
@@ -17,6 +17,7 @@ export class UserService {
 
   queryBuilder(user: Partial<User>) {
     const query = {
+      ...(user._id && { _id: user._id }),
       ...(user.firstName && {
         firstName: { $regex: user.firstName, $options: 'i' },
       }),
@@ -39,9 +40,13 @@ export class UserService {
     return this.userModel.create(input);
   }
 
-  getUser(input: Partial<User>): Promise<User | null> {
+  async getUser(input: Partial<User>): Promise<User | null> {
     const query = this.queryBuilder(input);
-    return this.userModel.findOne(query);
+    const user = await this.userModel.findOne(query);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return user;
   }
 
   getUsers(input: PaginateUserInput): Promise<PaginatedUser> {
