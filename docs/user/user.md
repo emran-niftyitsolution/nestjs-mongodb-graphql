@@ -54,6 +54,33 @@ The User module provides endpoints for user management, including creation, retr
 
 ---
 
+### 4. Update User
+
+- **Mutation:** `updateUser(input: UpdateUserInput): User`
+- **Description:** Updates user fields by \_id. Only provided fields in input are updated.
+- **Input:**
+  - `input` (object, required):
+    - `_id` (ObjectId, required)
+    - Any of: `firstName`, `lastName`, `email`, `username`, `phone`, `password`, `gender`, `status` (all optional)
+- **Output:**
+  - Returns the updated `User` object or `null` if not found.
+- **Auth:** Required.
+
+---
+
+### 5. Soft Delete User
+
+- **Mutation:** `softDeleteUser(input: SoftDeleteUserInput): User`
+- **Description:** Soft deletes a user by setting their status to `DELETED`.
+- **Input:**
+  - `input` (object, required):
+    - `_id` (ObjectId, required)
+- **Output:**
+  - Returns the updated `User` object with status set to `DELETED`, or `null` if not found.
+- **Auth:** Required.
+
+---
+
 ## User Object Fields
 
 - `_id`: ObjectId

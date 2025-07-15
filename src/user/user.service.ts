@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { PaginateModel } from 'mongoose';
+import { PaginateModel, Types } from 'mongoose';
 import {
   CreateUserInput,
   PaginatedUser,
   PaginateUserInput,
+  UpdateUserInput,
 } from './dtos/user.input';
 import { User, UserDocument } from './schema/user.schema';
 
@@ -63,5 +64,20 @@ export class UserService {
       page: page || 1,
       limit: limit || 10,
     });
+  }
+
+  async updateUser(
+    id: Types.ObjectId,
+    update: Omit<UpdateUserInput, '_id'>,
+  ): Promise<User | null> {
+    return this.userModel.findByIdAndUpdate(id, update, { new: true });
+  }
+
+  async softDeleteUser(id: Types.ObjectId): Promise<User | null> {
+    return this.userModel.findByIdAndUpdate(
+      id,
+      { status: 'DELETED' },
+      { new: true },
+    );
   }
 }

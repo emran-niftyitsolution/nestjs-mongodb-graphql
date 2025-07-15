@@ -4,6 +4,8 @@ import {
   GetUserInput,
   PaginatedUser,
   PaginateUserInput,
+  SoftDeleteUserInput,
+  UpdateUserInput,
 } from './dtos/user.input';
 import { User } from './schema/user.schema';
 import { UserService } from './user.service';
@@ -25,5 +27,18 @@ export class UserResolver {
   @Query(() => PaginatedUser)
   getUsers(@Args('input') input: PaginateUserInput): Promise<PaginatedUser> {
     return this.userService.getUsers(input);
+  }
+
+  @Mutation(() => User)
+  updateUser(@Args('input') input: UpdateUserInput): Promise<User | null> {
+    const { _id, ...update } = input;
+    return this.userService.updateUser(_id, update);
+  }
+
+  @Mutation(() => User)
+  softDeleteUser(
+    @Args('input') input: SoftDeleteUserInput,
+  ): Promise<User | null> {
+    return this.userService.softDeleteUser(input._id);
   }
 }
