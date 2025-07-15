@@ -9,6 +9,7 @@ import * as mongoosePaginateV2 from 'mongoose-paginate-v2';
 import * as mongooseUniqueValidator from 'mongoose-unique-validator';
 import { AppResolver } from './app.resolver';
 import { AppService } from './app.service';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { AppService } from './app.service';
       autoSchemaFile: true,
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
     }),
+    UserModule,
   ],
   providers: [AppService, AppResolver],
 })
