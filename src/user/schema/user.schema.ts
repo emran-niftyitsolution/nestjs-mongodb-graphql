@@ -8,9 +8,12 @@ import {
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   IsEmail,
+  IsMongoId,
   IsNotEmpty,
   IsOptional,
+  IsPhoneNumber,
   IsString,
+  IsStrongPassword,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -45,28 +48,29 @@ registerEnumType(UserStatus, {
   timestamps: true,
 })
 export class User {
+  @IsMongoId()
+  @IsNotEmpty()
   @Field(() => ID)
   _id: Types.ObjectId;
 
+  @MaxLength(20)
+  @MinLength(2)
   @IsString()
   @IsNotEmpty()
-  @MinLength(2)
-  @MaxLength(20)
   @Field(() => String)
   @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
   firstName: string;
 
+  @MaxLength(20)
+  @MinLength(2)
   @IsString()
   @IsNotEmpty()
-  @MinLength(2)
-  @MaxLength(20)
   @Field(() => String)
   @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
   lastName: string;
 
-  @IsString()
-  @IsNotEmpty()
   @IsEmail()
+  @IsNotEmpty()
   @Field(() => String)
   @Prop({ required: true, unique: true, trim: true, lowercase: true })
   email: string;
@@ -77,16 +81,23 @@ export class User {
   @Prop({ required: true, unique: true, trim: true, lowercase: true })
   username: string;
 
-  @IsString()
+  @IsPhoneNumber()
   @IsNotEmpty()
   @Field(() => String)
   @Prop({ required: true, unique: true, trim: true })
   phone: string;
 
+  @MaxLength(20)
+  @MinLength(8)
+  @IsStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 1,
+  })
   @IsString()
   @IsNotEmpty()
-  @MinLength(8)
-  @MaxLength(20)
   @Field(() => String)
   @Prop({ required: true, minlength: 8, maxlength: 20, trim: true })
   password: string;
