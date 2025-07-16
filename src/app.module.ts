@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { Request, Response } from 'express';
 import { Connection } from 'mongoose';
 import * as mongoosePaginateV2 from 'mongoose-paginate-v2';
 import * as mongooseUniqueValidator from 'mongoose-unique-validator';
