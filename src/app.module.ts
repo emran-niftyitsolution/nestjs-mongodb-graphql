@@ -23,8 +23,14 @@ import { UserModule } from './user/user.module';
         uri: configService.get<string>('MONGO_URI'),
         onConnectionCreate: (connection: Connection) => {
           const logger = new Logger('MongoDB', { timestamp: true });
+          const dbName = configService
+            .get<string>('MONGO_URI')
+            ?.split('/')
+            .pop();
 
-          connection.on('connected', () => logger.log('MongoDB connected'));
+          connection.on('connected', () =>
+            logger.log('MongoDB connected to ' + dbName),
+          );
           connection.on('open', () => logger.log('MongoDB open'));
           connection.on('disconnected', () =>
             logger.log('MongoDB disconnected'),
@@ -47,6 +53,7 @@ import { UserModule } from './user/user.module';
       driver: ApolloDriver,
       playground: false,
       autoSchemaFile: true,
+      sortSchema: true,
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
     }),
     UserModule,
