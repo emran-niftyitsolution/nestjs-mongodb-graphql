@@ -87,7 +87,7 @@ export class User {
   @Prop({ required: true, unique: true, trim: true })
   phone: string;
 
-  @MaxLength(20)
+  @MaxLength(32)
   @MinLength(8)
   @IsStrongPassword({
     minLength: 8,
@@ -99,7 +99,7 @@ export class User {
   @IsString()
   @IsNotEmpty()
   @Field(() => String)
-  @Prop({ required: true, minlength: 8, maxlength: 20, trim: true })
+  @Prop({ required: true, minlength: 8, trim: true })
   password: string;
 
   @IsNotEmpty()
@@ -119,7 +119,7 @@ export class User {
 
   @IsNotEmpty()
   @Field(() => UserStatus)
-  @Prop({ type: String, enum: UserStatus, default: UserStatus.ACTIVE })
+  @Prop({ type: String, enum: UserStatus, default: UserStatus.PENDING })
   status: UserStatus;
 
   @Field(() => Date)

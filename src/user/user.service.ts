@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import * as argon2 from 'argon2';
 import { PaginateModel, Types } from 'mongoose';
 import {
   CreateUserInput,
@@ -8,7 +9,6 @@ import {
   UpdateUserInput,
 } from './dtos/user.input';
 import { User, UserDocument } from './schema/user.schema';
-
 @Injectable()
 export class UserService {
   constructor(
@@ -37,7 +37,12 @@ export class UserService {
   }
 
   async create(input: CreateUserInput): Promise<User> {
-    return this.userModel.create(input);
+    const hashedPassword = await argon2.hash(input.password); // Ideally, you should hash the password here
+
+    return this.userModel.create({
+      ...input,
+      password: hashedPassword,
+    });
   }
 
   async getUser(input: Partial<User>): Promise<User | null> {
@@ -71,6 +76,10 @@ export class UserService {
     id: Types.ObjectId,
     update: Omit<UpdateUserInput, '_id'>,
   ): Promise<User | null> {
+    if (update.password) {
+      update.password = await argon2.hash(update.password); // Hash the password before updating
+    }
+
     return this.userModel.findByIdAndUpdate(id, update, { new: true });
   }
 
