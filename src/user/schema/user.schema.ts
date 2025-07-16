@@ -98,7 +98,6 @@ export class User {
   })
   @IsString()
   @IsNotEmpty()
-  @Field(() => String)
   @Prop({ required: true, minlength: 8, trim: true })
   password: string;
 
