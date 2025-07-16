@@ -1,4 +1,5 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Public } from '../common/decorators/public.decorator';
 import { AuthService } from './auth.service';
 import {
   LoginInput,
@@ -6,6 +7,7 @@ import {
   RefreshTokenInput,
 } from './dtos/auth.input';
 
+@Public()
 @Resolver()
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
