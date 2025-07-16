@@ -8,7 +8,7 @@ import {
   LoginResponse,
   RefreshTokenInput,
 } from './dtos/auth.input';
-import { JwtPayload } from './interfaces/jwt.interface';
+import { JwtPayload, Tokens } from './interfaces/jwt.interface';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +18,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  private getTokens(input: JwtPayload) {
+  private getTokens(input: JwtPayload): Tokens {
     const accessToken = this.jwtService.sign(
       {
         sub: input.sub,

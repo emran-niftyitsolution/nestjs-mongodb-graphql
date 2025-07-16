@@ -201,7 +201,6 @@
                                     <span class="modifier"></span>
                                     <span class="modifier"></span>
                                     <span class="modifier"></span>
-                                    <span class="modifier"></span>
                                 <a href="#password" >password</a>
                             </li>
                             <li>
@@ -314,7 +313,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="126" class="link-to-prism">src/user/schema/user.schema.ts:126</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="125" class="link-to-prism">src/user/schema/user.schema.ts:125</a></div>
                         </td>
                     </tr>
 
@@ -353,7 +352,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="113" class="link-to-prism">src/user/schema/user.schema.ts:113</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="112" class="link-to-prism">src/user/schema/user.schema.ts:112</a></div>
                         </td>
                     </tr>
 
@@ -471,7 +470,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="108" class="link-to-prism">src/user/schema/user.schema.ts:108</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="107" class="link-to-prism">src/user/schema/user.schema.ts:107</a></div>
                         </td>
                     </tr>
 
@@ -510,7 +509,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="118" class="link-to-prism">src/user/schema/user.schema.ts:118</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="117" class="link-to-prism">src/user/schema/user.schema.ts:117</a></div>
                         </td>
                     </tr>
 
@@ -570,7 +569,6 @@
                             <span class="modifier"></span>
                             <span class="modifier"></span>
                             <span class="modifier"></span>
-                            <span class="modifier"></span>
                         <span ><b>password</b></span>
                         <a href="#password"><span class="icon ion-ios-link"></span></a>
                     </span>
@@ -587,13 +585,13 @@
                         <b>Decorators : </b>
                         <br />
                         <code>
-                            @MaxLength(20)<br />@MinLength(8)<br />@IsStrongPassword({minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1})<br />@IsString()<br />@IsNotEmpty()<br />@Field(undefined)<br />@Prop({required: true, minlength: 8, maxlength: 20, trim: true})<br />
+                            @MaxLength(32)<br />@MinLength(8)<br />@IsStrongPassword({minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1})<br />@IsString()<br />@IsNotEmpty()<br />@Prop({required: true, minlength: 8, trim: true})<br />
                         </code>
                     </td>
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="103" class="link-to-prism">src/user/schema/user.schema.ts:103</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="102" class="link-to-prism">src/user/schema/user.schema.ts:102</a></div>
                         </td>
                     </tr>
 
@@ -670,7 +668,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="123" class="link-to-prism">src/user/schema/user.schema.ts:123</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="122" class="link-to-prism">src/user/schema/user.schema.ts:122</a></div>
                         </td>
                     </tr>
 
@@ -706,7 +704,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="129" class="link-to-prism">src/user/schema/user.schema.ts:129</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="128" class="link-to-prism">src/user/schema/user.schema.ts:128</a></div>
                         </td>
                     </tr>
 
@@ -853,7 +851,7 @@ export class User {
   @Prop({ required: true, unique: true, trim: true })
   phone: string;
 
-  @MaxLength(20)
+  @MaxLength(32)
   @MinLength(8)
   @IsStrongPassword({
     minLength: 8,
@@ -864,8 +862,7 @@ export class User {
   })
   @IsString()
   @IsNotEmpty()
-  @Field(() &#x3D;&gt; String)
-  @Prop({ required: true, minlength: 8, maxlength: 20, trim: true })
+  @Prop({ required: true, minlength: 8, trim: true })
   password: string;
 
   @IsNotEmpty()
@@ -885,7 +882,7 @@ export class User {
 
   @IsNotEmpty()
   @Field(() &#x3D;&gt; UserStatus)
-  @Prop({ type: String, enum: UserStatus, default: UserStatus.ACTIVE })
+  @Prop({ type: String, enum: UserStatus, default: UserStatus.PENDING })
   status: UserStatus;
 
   @Field(() &#x3D;&gt; Date)

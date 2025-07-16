@@ -86,7 +86,7 @@
 
 <ol class="breadcrumb">
     <li class="breadcrumb-item">Modules</li>
-    <li class="breadcrumb-item" >AppModule</li>
+    <li class="breadcrumb-item" >AuthModule</li>
 </ol>
 
 <div class="text-center module-graph-container">
@@ -114,58 +114,58 @@
 <polygon fill="#fb8072" stroke="transparent" points="406,-10 406,-30 426,-30 426,-10 406,-10"/>
 <text text-anchor="start" x="429.73" y="-15.4" font-family="Times-12" font-size="14.00"> &#160;Exports</text>
 <g id="clust1" class="cluster">
-<title>cluster_AppModule</title>
-<polygon fill="none" stroke="black" stroke-dasharray="1,5" points="67,-70 67,-195 429,-195 429,-70 67,-70"/>
+<title>cluster_AuthModule</title>
+<polygon fill="none" stroke="black" stroke-dasharray="1,5" points="52,-70 52,-195 444,-195 444,-70 52,-70"/>
 </g>
 <g id="clust3" class="cluster">
-<title>cluster_AppModule_imports</title>
-<polygon fill="none" stroke="black" points="213,-78 213,-130 421,-130 421,-78 213,-78"/>
+<title>cluster_AuthModule_imports</title>
+<polygon fill="none" stroke="black" points="334,-78 334,-130 436,-130 436,-78 334,-78"/>
 </g>
 <g id="clust6" class="cluster">
-<title>cluster_AppModule_providers</title>
-<polygon fill="none" stroke="black" points="75,-78 75,-130 205,-130 205,-78 75,-78"/>
-</g>
-<!-- AuthModule -->
-<g id="node1" class="node">
-<title>AuthModule</title>
-<polygon fill="#8dd3c7" stroke="black" points="412.55,-122 409.55,-126 388.55,-126 385.55,-122 325.45,-122 325.45,-86 412.55,-86 412.55,-122"/>
-<text text-anchor="middle" x="369" y="-99.8" font-family="Times,serif" font-size="14.00">AuthModule</text>
-</g>
-<!-- AppModule -->
-<g id="node3" class="node">
-<title>AppModule</title>
-<polygon fill="#8dd3c7" stroke="black" points="305.66,-187 302.66,-191 281.66,-191 278.66,-187 222.34,-187 222.34,-151 305.66,-151 305.66,-187"/>
-<text text-anchor="middle" x="264" y="-164.8" font-family="Times,serif" font-size="14.00">AppModule</text>
-</g>
-<!-- AuthModule&#45;&gt;AppModule -->
-<g id="edge1" class="edge">
-<title>AuthModule&#45;&gt;AppModule</title>
-<path fill="none" stroke="black" d="M369,-122.11C369,-141.34 369,-169 369,-169 369,-169 315.8,-169 315.8,-169"/>
-<polygon fill="black" stroke="black" points="315.8,-165.5 305.8,-169 315.8,-172.5 315.8,-165.5"/>
+<title>cluster_AuthModule_providers</title>
+<polygon fill="none" stroke="black" points="60,-78 60,-130 326,-130 326,-78 60,-78"/>
 </g>
 <!-- UserModule -->
-<g id="node2" class="node">
+<g id="node1" class="node">
 <title>UserModule</title>
-<polygon fill="#8dd3c7" stroke="black" points="306.98,-122 303.98,-126 282.98,-126 279.98,-122 221.02,-122 221.02,-86 306.98,-86 306.98,-122"/>
-<text text-anchor="middle" x="264" y="-99.8" font-family="Times,serif" font-size="14.00">UserModule</text>
+<polygon fill="#8dd3c7" stroke="black" points="427.98,-122 424.98,-126 403.98,-126 400.98,-122 342.02,-122 342.02,-86 427.98,-86 427.98,-122"/>
+<text text-anchor="middle" x="385" y="-99.8" font-family="Times,serif" font-size="14.00">UserModule</text>
 </g>
-<!-- UserModule&#45;&gt;AppModule -->
+<!-- AuthModule -->
+<g id="node2" class="node">
+<title>AuthModule</title>
+<polygon fill="#8dd3c7" stroke="black" points="302.55,-187 299.55,-191 278.55,-191 275.55,-187 215.45,-187 215.45,-151 302.55,-151 302.55,-187"/>
+<text text-anchor="middle" x="259" y="-164.8" font-family="Times,serif" font-size="14.00">AuthModule</text>
+</g>
+<!-- UserModule&#45;&gt;AuthModule -->
+<g id="edge1" class="edge">
+<title>UserModule&#45;&gt;AuthModule</title>
+<path fill="none" stroke="black" d="M385,-122.11C385,-141.34 385,-169 385,-169 385,-169 312.72,-169 312.72,-169"/>
+<polygon fill="black" stroke="black" points="312.72,-165.5 302.72,-169 312.72,-172.5 312.72,-165.5"/>
+</g>
+<!-- AuthService -->
+<g id="node3" class="node">
+<title>AuthService</title>
+<ellipse fill="#fdb462" stroke="black" cx="259" cy="-104" rx="59.11" ry="18"/>
+<text text-anchor="middle" x="259" y="-99.8" font-family="Times,serif" font-size="14.00">AuthService</text>
+</g>
+<!-- AuthService&#45;&gt;AuthModule -->
 <g id="edge2" class="edge">
-<title>UserModule&#45;&gt;AppModule</title>
-<path fill="none" stroke="black" d="M264,-122.11C264,-122.11 264,-140.99 264,-140.99"/>
-<polygon fill="black" stroke="black" points="260.5,-140.99 264,-150.99 267.5,-140.99 260.5,-140.99"/>
+<title>AuthService&#45;&gt;AuthModule</title>
+<path fill="none" stroke="black" d="M259,-122.11C259,-122.11 259,-140.99 259,-140.99"/>
+<polygon fill="black" stroke="black" points="255.5,-140.99 259,-150.99 262.5,-140.99 255.5,-140.99"/>
 </g>
-<!-- AppService -->
+<!-- JwtStrategy -->
 <g id="node4" class="node">
-<title>AppService</title>
-<ellipse fill="#fdb462" stroke="black" cx="140" cy="-104" rx="56.74" ry="18"/>
-<text text-anchor="middle" x="140" y="-99.8" font-family="Times,serif" font-size="14.00">AppService</text>
+<title>JwtStrategy</title>
+<ellipse fill="#fdb462" stroke="black" cx="125" cy="-104" rx="56.76" ry="18"/>
+<text text-anchor="middle" x="125" y="-99.8" font-family="Times,serif" font-size="14.00">JwtStrategy</text>
 </g>
-<!-- AppService&#45;&gt;AppModule -->
+<!-- JwtStrategy&#45;&gt;AuthModule -->
 <g id="edge3" class="edge">
-<title>AppService&#45;&gt;AppModule</title>
-<path fill="none" stroke="black" d="M140,-122.11C140,-141.34 140,-169 140,-169 140,-169 212.02,-169 212.02,-169"/>
-<polygon fill="black" stroke="black" points="212.02,-172.5 222.02,-169 212.02,-165.5 212.02,-172.5"/>
+<title>JwtStrategy&#45;&gt;AuthModule</title>
+<path fill="none" stroke="black" d="M125,-122.11C125,-141.34 125,-169 125,-169 125,-169 205.12,-169 205.12,-169"/>
+<polygon fill="black" stroke="black" points="205.12,-172.5 215.12,-169 205.12,-165.5 205.12,-172.5"/>
 </g>
 </g>
 </svg>
@@ -203,7 +203,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/app.module.ts</code>
+            <code>src/auth/auth.module.ts</code>
         </p>
 
 
@@ -217,7 +217,10 @@
                             title="Official documentation about module providers"><span class="icon ion-ios-information-circle-outline"></a></h3>
                     <ul class="list-group">
                         <li class="list-group-item">
-                            <a href="../injectables/AppService.html">AppService</a>
+                            <a href="../injectables/AuthService.html">AuthService</a>
+                        </li>
+                        <li class="list-group-item">
+                            <a href="../injectables/JwtStrategy.html">JwtStrategy</a>
                         </li>
                     </ul>
                 </div>
@@ -226,9 +229,6 @@
                             title="Official documentation about module imports"><span
                                 class="icon ion-ios-information-circle-outline"></a></h3>
                     <ul class="list-group">
-                        <li class="list-group-item">
-                            <a href="../modules/AuthModule.html">AuthModule</a>
-                        </li>
                         <li class="list-group-item">
                             <a href="../modules/UserModule.html">UserModule</a>
                         </li>
@@ -242,102 +242,18 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { ApolloServerPluginLandingPageLocalDefault } from &#x27;@apollo/server/plugin/landingPage/default&#x27;;
-import { ApolloDriver, ApolloDriverConfig } from &#x27;@nestjs/apollo&#x27;;
-import { Logger, Module } from &#x27;@nestjs/common&#x27;;
-import { ConfigModule, ConfigService } from &#x27;@nestjs/config&#x27;;
-import { APP_GUARD } from &#x27;@nestjs/core&#x27;;
-import { GraphQLModule } from &#x27;@nestjs/graphql&#x27;;
-import { MongooseModule } from &#x27;@nestjs/mongoose&#x27;;
-import { ThrottlerModule } from &#x27;@nestjs/throttler&#x27;;
-import { Request, Response } from &#x27;express&#x27;;
-import { Connection } from &#x27;mongoose&#x27;;
-import * as mongoosePaginateV2 from &#x27;mongoose-paginate-v2&#x27;;
-import * as mongooseUniqueValidator from &#x27;mongoose-unique-validator&#x27;;
-import { AppResolver } from &#x27;./app.resolver&#x27;;
-import { AppService } from &#x27;./app.service&#x27;;
-import { AuthModule } from &#x27;./auth/auth.module&#x27;;
-import { GqlAuthGuard } from &#x27;./common/guards/gql-auth.guard&#x27;;
-import { GqlThrottlerGuard } from &#x27;./common/guards/graphq-throttler.guard&#x27;;
-import { UserModule } from &#x27;./user/user.module&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Module } from &#x27;@nestjs/common&#x27;;
+import { JwtModule } from &#x27;@nestjs/jwt&#x27;; // Assuming you have a JwtModule for JWT handling
+import { UserModule } from &#x27;../user/user.module&#x27;;
+import { AuthResolver } from &#x27;./auth.resolver&#x27;;
+import { AuthService } from &#x27;./auth.service&#x27;;
+import { JwtStrategy } from &#x27;./strategies/jwt.strategy&#x27;;
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) &#x3D;&gt; ({
-        uri: configService.get&lt;string&gt;(&#x27;MONGO_URI&#x27;),
-        onConnectionCreate: (connection: Connection) &#x3D;&gt; {
-          const logger &#x3D; new Logger(&#x27;MongoDB&#x27;, { timestamp: true });
-          const dbName &#x3D; configService
-            .get&lt;string&gt;(&#x27;MONGO_URI&#x27;)
-            ?.split(&#x27;/&#x27;)
-            .pop();
-
-          connection.on(&#x27;connected&#x27;, () &#x3D;&gt;
-            logger.log(&#x27;MongoDB connected to &#x27; + dbName),
-          );
-          connection.on(&#x27;open&#x27;, () &#x3D;&gt; logger.log(&#x27;MongoDB open&#x27;));
-          connection.on(&#x27;disconnected&#x27;, () &#x3D;&gt;
-            logger.log(&#x27;MongoDB disconnected&#x27;),
-          );
-          connection.on(&#x27;reconnected&#x27;, () &#x3D;&gt; logger.log(&#x27;MongoDB reconnected&#x27;));
-          connection.on(&#x27;disconnecting&#x27;, () &#x3D;&gt;
-            logger.log(&#x27;MongoDB disconnecting&#x27;),
-          );
-
-          connection.plugin(mongoosePaginateV2);
-          connection.plugin(mongooseUniqueValidator, {
-            message: &#x27;Error, expected {PATH} to be unique.&#x27;,
-          });
-
-          return connection;
-        },
-      }),
-    }),
-    GraphQLModule.forRoot&lt;ApolloDriverConfig&gt;({
-      driver: ApolloDriver,
-      playground: false,
-      autoSchemaFile: true,
-      sortSchema: true,
-      plugins: [ApolloServerPluginLandingPageLocalDefault()],
-      context: ({
-        req,
-        res,
-      }: {
-        req: Request;
-        res: Response;
-      }): { req: Request; res: Response } &#x3D;&gt; ({ req, res }),
-    }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 10,
-        },
-      ],
-    }),
-    UserModule,
-    AuthModule,
-  ],
-  providers: [
-    AppService,
-    AppResolver,
-    {
-      provide: APP_GUARD,
-      useClass: GqlThrottlerGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: GqlAuthGuard,
-    },
-  ],
+  imports: [JwtModule, UserModule],
+  providers: [AuthResolver, AuthService, JwtStrategy],
 })
-export class AppModule {}
+export class AuthModule {}
 </code></pre>
     </div>
 </div>
@@ -384,7 +300,7 @@ export class AppModule {}
        <script>
             var COMPODOC_CURRENT_PAGE_DEPTH = 1;
             var COMPODOC_CURRENT_PAGE_CONTEXT = 'module';
-            var COMPODOC_CURRENT_PAGE_URL = 'AppModule.html';
+            var COMPODOC_CURRENT_PAGE_URL = 'AuthModule.html';
             var MAX_SEARCH_RESULTS = 15;
        </script>
 

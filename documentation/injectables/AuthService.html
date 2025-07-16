@@ -91,7 +91,7 @@
 
 <ol class="breadcrumb">
   <li class="breadcrumb-item">Injectables</li>
-  <li class="breadcrumb-item" >UserService</li>
+  <li class="breadcrumb-item" >AuthService</li>
 </ol>
 
 <ul class="nav nav-tabs" role="tablist">
@@ -115,7 +115,7 @@
             <h3>File</h3>
         </p>
         <p class="comment">
-            <code>src/user/user.service.ts</code>
+            <code>src/auth/auth.service.ts</code>
         </p>
 
 
@@ -136,26 +136,16 @@
                     <td class="col-md-4">
                         <ul class="index-list">
                             <li>
-                                    <span class="modifier">Async</span>
-                                <a href="#create" >create</a>
+                                    <span class="modifier">Private</span>
+                                <a href="#getTokens" >getTokens</a>
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
-                                <a href="#getUser" >getUser</a>
-                            </li>
-                            <li>
-                                <a href="#getUsers" >getUsers</a>
-                            </li>
-                            <li>
-                                <a href="#queryBuilder" >queryBuilder</a>
+                                <a href="#login" >login</a>
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
-                                <a href="#softDeleteUser" >softDeleteUser</a>
-                            </li>
-                            <li>
-                                    <span class="modifier">Async</span>
-                                <a href="#updateUser" >updateUser</a>
+                                <a href="#refreshToken" >refreshToken</a>
                             </li>
                         </ul>
                     </td>
@@ -175,12 +165,12 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-<code>constructor(userModel: <a href="../classes/User.html" target="_self">PaginateModel&lt;UserDocument&gt;</a>)</code>
+<code>constructor(userService: <a href="../injectables/UserService.html" target="_self">UserService</a>, jwtService: JwtService, configService: ConfigService)</code>
                     </td>
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="13" class="link-to-prism">src/user/user.service.ts:13</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="14" class="link-to-prism">src/auth/auth.service.ts:14</a></div>
                             </td>
                         </tr>
 
@@ -198,10 +188,34 @@
                                         </thead>
                                         <tbody>
                                                 <tr>
-                                                        <td>userModel</td>
+                                                        <td>userService</td>
                                                   
                                                         <td>
-                                                                        <code><a href="../classes/User.html" target="_self" >PaginateModel&lt;UserDocument&gt;</a></code>
+                                                                        <code><a href="../injectables/UserService.html" target="_self" >UserService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>jwtService</td>
+                                                  
+                                                        <td>
+                                                                    <code>JwtService</code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>configService</td>
+                                                  
+                                                        <td>
+                                                                    <code>ConfigService</code>
                                                         </td>
                                                   
                                                     <td>
@@ -227,26 +241,26 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="create"></a>
+                    <a name="getTokens"></a>
                     <span class="name">
-                            <span class="modifier">Async</span>
-                        <span ><b>create</b></span>
-                        <a href="#create"><span class="icon ion-ios-link"></span></a>
+                            <span class="modifier">Private</span>
+                        <span ><b>getTokens</b></span>
+                        <a href="#getTokens"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>create(input: <a href="../classes/CreateUserInput.html" target="_self">CreateUserInput</a>)</code>
+                    <code>getTokens(input: <a href="../interfaces/JwtPayload.html" target="_self">JwtPayload</a>)</code>
                 </td>
             </tr>
 
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="39"
-                                    class="link-to-prism">src/user/user.service.ts:39</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="21"
+                                    class="link-to-prism">src/auth/auth.service.ts:21</a></div>
                         </td>
                     </tr>
 
@@ -269,7 +283,7 @@
                                         <tr>
                                                 <td>input</td>
                                             <td>
-                                                            <code><a href="../classes/CreateUserInput.html" target="_self" >CreateUserInput</a></code>
+                                                            <code><a href="../interfaces/JwtPayload.html" target="_self" >JwtPayload</a></code>
                                             </td>
 
                                             <td>
@@ -282,7 +296,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>        <code><a href="../classes/User.html" target="_self" >Promise&lt;User&gt;</a></code>
+                            <b>Returns : </b>        <code><a href="../interfaces/Tokens.html" target="_self" >Tokens</a></code>
 
                         </div>
                             <div class="io-description">
@@ -296,26 +310,26 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="getUser"></a>
+                    <a name="login"></a>
                     <span class="name">
                             <span class="modifier">Async</span>
-                        <span ><b>getUser</b></span>
-                        <a href="#getUser"><span class="icon ion-ios-link"></span></a>
+                        <span ><b>login</b></span>
+                        <a href="#login"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
                         <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>getUser(input: <a href="../classes/User.html" target="_self">Partial&lt;User&gt;</a>)</code>
+                    <code>login(input: <a href="../classes/LoginInput.html" target="_self">LoginInput</a>)</code>
                 </td>
             </tr>
 
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="48"
-                                    class="link-to-prism">src/user/user.service.ts:48</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="47"
+                                    class="link-to-prism">src/auth/auth.service.ts:47</a></div>
                         </td>
                     </tr>
 
@@ -338,7 +352,7 @@
                                         <tr>
                                                 <td>input</td>
                                             <td>
-                                                            <code><a href="../classes/User.html" target="_self" >Partial&lt;User&gt;</a></code>
+                                                            <code><a href="../classes/LoginInput.html" target="_self" >LoginInput</a></code>
                                             </td>
 
                                             <td>
@@ -351,7 +365,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>        <code><a href="../classes/User.html" target="_self" >Promise&lt;User | null&gt;</a></code>
+                            <b>Returns : </b>        <code><a href="../classes/LoginResponse.html" target="_self" >Promise&lt;LoginResponse&gt;</a></code>
 
                         </div>
                             <div class="io-description">
@@ -365,24 +379,26 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
-                    <a name="getUsers"></a>
+                    <a name="refreshToken"></a>
                     <span class="name">
-                        <span ><b>getUsers</b></span>
-                        <a href="#getUsers"><span class="icon ion-ios-link"></span></a>
+                            <span class="modifier">Async</span>
+                        <span ><b>refreshToken</b></span>
+                        <a href="#refreshToken"><span class="icon ion-ios-link"></span></a>
                     </span>
                 </td>
             </tr>
             <tr>
                 <td class="col-md-4">
-<code>getUsers(input: <a href="../classes/PaginateUserInput.html" target="_self">PaginateUserInput</a>)</code>
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>refreshToken(input: <a href="../classes/RefreshTokenInput.html" target="_self">RefreshTokenInput</a>)</code>
                 </td>
             </tr>
 
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="53"
-                                    class="link-to-prism">src/user/user.service.ts:53</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="63"
+                                    class="link-to-prism">src/auth/auth.service.ts:63</a></div>
                         </td>
                     </tr>
 
@@ -405,7 +421,7 @@
                                         <tr>
                                                 <td>input</td>
                                             <td>
-                                                            <code><a href="../classes/PaginateUserInput.html" target="_self" >PaginateUserInput</a></code>
+                                                            <code><a href="../classes/RefreshTokenInput.html" target="_self" >RefreshTokenInput</a></code>
                                             </td>
 
                                             <td>
@@ -418,224 +434,7 @@
                                 </table>
                             </div>
                         <div class="io-description">
-                            <b>Returns : </b>    <code>Promise&lt;PaginatedUser&gt;</code>
-
-                        </div>
-                            <div class="io-description">
-                                
-                            </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="queryBuilder"></a>
-                    <span class="name">
-                        <span ><b>queryBuilder</b></span>
-                        <a href="#queryBuilder"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-            <tr>
-                <td class="col-md-4">
-<code>queryBuilder(user: <a href="../classes/User.html" target="_self">Partial&lt;User&gt;</a>)</code>
-                </td>
-            </tr>
-
-
-                    <tr>
-                        <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="18"
-                                    class="link-to-prism">src/user/user.service.ts:18</a></div>
-                        </td>
-                    </tr>
-
-
-            <tr>
-                <td class="col-md-4">
-
-                            <div class="io-description">
-                                <b>Parameters :</b>
-                                
-                                <table class="params">
-                                    <thead>
-                                        <tr>
-                                            <td>Name</td>
-                                                <td>Type</td>
-                                            <td>Optional</td>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                                <td>user</td>
-                                            <td>
-                                                            <code><a href="../classes/User.html" target="_self" >Partial&lt;User&gt;</a></code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <div class="io-description">
-                            <b>Returns : </b>    <code>{ status: any; gender: any; phone: { $regex: any; $options: string; }; username: { $regex: any; $options: string; }; email: { $regex: any; $options: string; }; lastName: { $regex: any; $options: string; }; firstName: { ...; }; _id: any; }</code>
-
-                        </div>
-                            <div class="io-description">
-                                
-                            </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="softDeleteUser"></a>
-                    <span class="name">
-                            <span class="modifier">Async</span>
-                        <span ><b>softDeleteUser</b></span>
-                        <a href="#softDeleteUser"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-            <tr>
-                <td class="col-md-4">
-                        <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>softDeleteUser(id: Types.ObjectId)</code>
-                </td>
-            </tr>
-
-
-                    <tr>
-                        <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="86"
-                                    class="link-to-prism">src/user/user.service.ts:86</a></div>
-                        </td>
-                    </tr>
-
-
-            <tr>
-                <td class="col-md-4">
-
-                            <div class="io-description">
-                                <b>Parameters :</b>
-                                
-                                <table class="params">
-                                    <thead>
-                                        <tr>
-                                            <td>Name</td>
-                                                <td>Type</td>
-                                            <td>Optional</td>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                                <td>id</td>
-                                            <td>
-                                                        <code>Types.ObjectId</code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <div class="io-description">
-                            <b>Returns : </b>        <code><a href="../classes/User.html" target="_self" >Promise&lt;User | null&gt;</a></code>
-
-                        </div>
-                            <div class="io-description">
-                                
-                            </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <table class="table table-sm table-bordered">
-        <tbody>
-            <tr>
-                <td class="col-md-4">
-                    <a name="updateUser"></a>
-                    <span class="name">
-                            <span class="modifier">Async</span>
-                        <span ><b>updateUser</b></span>
-                        <a href="#updateUser"><span class="icon ion-ios-link"></span></a>
-                    </span>
-                </td>
-            </tr>
-            <tr>
-                <td class="col-md-4">
-                        <span class="modifier-icon icon ion-ios-reset"></span>
-                    <code>updateUser(id: Types.ObjectId, update: Omit<UpdateUserInput | _id>)</code>
-                </td>
-            </tr>
-
-
-                    <tr>
-                        <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="75"
-                                    class="link-to-prism">src/user/user.service.ts:75</a></div>
-                        </td>
-                    </tr>
-
-
-            <tr>
-                <td class="col-md-4">
-
-                            <div class="io-description">
-                                <b>Parameters :</b>
-                                
-                                <table class="params">
-                                    <thead>
-                                        <tr>
-                                            <td>Name</td>
-                                                <td>Type</td>
-                                            <td>Optional</td>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                                <td>id</td>
-                                            <td>
-                                                        <code>Types.ObjectId</code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-
-                                        </tr>
-                                        <tr>
-                                                <td>update</td>
-                                            <td>
-                                                        <code>Omit&lt;UpdateUserInput | _id&gt;</code>
-                                            </td>
-
-                                            <td>
-                                                    No
-                                            </td>
-
-
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <div class="io-description">
-                            <b>Returns : </b>        <code><a href="../classes/User.html" target="_self" >Promise&lt;User | null&gt;</a></code>
+                            <b>Returns : </b>        <code><a href="../classes/LoginResponse.html" target="_self" >Promise&lt;LoginResponse&gt;</a></code>
 
                         </div>
                             <div class="io-description">
@@ -651,97 +450,82 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable } from &#x27;@nestjs/common&#x27;;
-import { InjectModel } from &#x27;@nestjs/mongoose&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, UnauthorizedException } from &#x27;@nestjs/common&#x27;;
+import { ConfigService } from &#x27;@nestjs/config&#x27;;
+import { JwtService } from &#x27;@nestjs/jwt&#x27;;
 import * as argon2 from &#x27;argon2&#x27;;
-import { PaginateModel, Types } from &#x27;mongoose&#x27;;
+import { UserService } from &#x27;../user/user.service&#x27;;
 import {
-  CreateUserInput,
-  PaginatedUser,
-  PaginateUserInput,
-  UpdateUserInput,
-} from &#x27;./dtos/user.input&#x27;;
-import { User, UserDocument } from &#x27;./schema/user.schema&#x27;;
+  LoginInput,
+  LoginResponse,
+  RefreshTokenInput,
+} from &#x27;./dtos/auth.input&#x27;;
+import { JwtPayload, Tokens } from &#x27;./interfaces/jwt.interface&#x27;;
+
 @Injectable()
-export class UserService {
+export class AuthService {
   constructor(
-    @InjectModel(User.name) private userModel: PaginateModel&lt;UserDocument&gt;,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
-  queryBuilder(user: Partial&lt;User&gt;) {
-    const query &#x3D; {
-      ...(user._id &amp;&amp; { _id: user._id }),
-      ...(user.firstName &amp;&amp; {
-        firstName: { $regex: user.firstName, $options: &#x27;i&#x27; },
-      }),
-      ...(user.lastName &amp;&amp; {
-        lastName: { $regex: user.lastName, $options: &#x27;i&#x27; },
-      }),
-      ...(user.email &amp;&amp; { email: { $regex: user.email, $options: &#x27;i&#x27; } }),
-      ...(user.username &amp;&amp; {
-        username: { $regex: user.username, $options: &#x27;i&#x27; },
-      }),
-      ...(user.phone &amp;&amp; { phone: { $regex: user.phone, $options: &#x27;i&#x27; } }),
-      ...(user.gender &amp;&amp; { gender: user.gender }),
-      ...(user.status &amp;&amp; { status: user.status }),
-    };
-
-    return query;
-  }
-
-  async create(input: CreateUserInput): Promise&lt;User&gt; {
-    const hashedPassword &#x3D; await argon2.hash(input.password); // Ideally, you should hash the password here
-
-    return this.userModel.create({
-      ...input,
-      password: hashedPassword,
-    });
-  }
-
-  async getUser(input: Partial&lt;User&gt;): Promise&lt;User | null&gt; {
-    const query &#x3D; this.queryBuilder(input);
-    return this.userModel.findOne(query);
-  }
-
-  getUsers(input: PaginateUserInput): Promise&lt;PaginatedUser&gt; {
-    const { page, limit, search, ...rest } &#x3D; input;
-
-    const query &#x3D; {
-      ...(search &amp;&amp; {
-        $or: [
-          { firstName: { $regex: search, $options: &#x27;i&#x27; } },
-          { lastName: { $regex: search, $options: &#x27;i&#x27; } },
-          { email: { $regex: search, $options: &#x27;i&#x27; } },
-          { username: { $regex: search, $options: &#x27;i&#x27; } },
-          { phone: { $regex: search, $options: &#x27;i&#x27; } },
-        ],
-      }),
-      ...this.queryBuilder(rest),
-    };
-
-    return this.userModel.paginate(query, {
-      page: page || 1,
-      limit: limit || 10,
-    });
-  }
-
-  async updateUser(
-    id: Types.ObjectId,
-    update: Omit&lt;UpdateUserInput, &#x27;_id&#x27;&gt;,
-  ): Promise&lt;User | null&gt; {
-    if (update.password) {
-      update.password &#x3D; await argon2.hash(update.password); // Hash the password before updating
-    }
-
-    return this.userModel.findByIdAndUpdate(id, update, { new: true });
-  }
-
-  async softDeleteUser(id: Types.ObjectId): Promise&lt;User | null&gt; {
-    return this.userModel.findByIdAndUpdate(
-      id,
-      { status: &#x27;DELETED&#x27; },
-      { new: true },
+  private getTokens(input: JwtPayload): Tokens {
+    const accessToken &#x3D; this.jwtService.sign(
+      {
+        sub: input.sub,
+        email: input.email,
+      },
+      {
+        secret: this.configService.get&lt;string&gt;(&#x27;ACCESS_TOKEN_SECRET&#x27;),
+        expiresIn: &#x27;1d&#x27;,
+      },
     );
+
+    const refreshToken &#x3D; this.jwtService.sign(
+      { sub: input.sub, email: input.email },
+      {
+        secret: this.configService.get&lt;string&gt;(&#x27;REFRESH_TOKEN_SECRET&#x27;),
+        expiresIn: &#x27;7d&#x27;,
+      },
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async login(input: LoginInput): Promise&lt;LoginResponse&gt; {
+    const user &#x3D; await this.userService.getUser({ username: input.username });
+    if (!user) throw new UnauthorizedException(&#x27;Invalid credentials&#x27;);
+
+    const valid &#x3D; await argon2.verify(user.password, input.password);
+    if (!valid) throw new UnauthorizedException(&#x27;Invalid credentials&#x27;);
+
+    return {
+      ...this.getTokens({
+        sub: user._id,
+        email: user.email,
+      }),
+      user,
+    };
+  }
+
+  async refreshToken(input: RefreshTokenInput): Promise&lt;LoginResponse&gt; {
+    try {
+      const payload &#x3D; this.jwtService.verify&lt;JwtPayload&gt;(input.refreshToken, {
+        secret: this.configService.get&lt;string&gt;(&#x27;REFRESH_TOKEN_SECRET&#x27;),
+      });
+      const user &#x3D; await this.userService.getUser({ _id: payload.sub });
+      if (!user) throw new UnauthorizedException(&#x27;Invalid refresh token&#x27;);
+      return {
+        ...this.getTokens({ sub: user._id, email: user.email }),
+        user,
+      };
+    } catch {
+      throw new UnauthorizedException(&#x27;Invalid refresh token&#x27;);
+    }
   }
 }
 </code></pre>
@@ -787,7 +571,7 @@ export class UserService {
        <script>
             var COMPODOC_CURRENT_PAGE_DEPTH = 1;
             var COMPODOC_CURRENT_PAGE_CONTEXT = 'injectable';
-            var COMPODOC_CURRENT_PAGE_URL = 'UserService.html';
+            var COMPODOC_CURRENT_PAGE_URL = 'AuthService.html';
             var MAX_SEARCH_RESULTS = 15;
        </script>
 
