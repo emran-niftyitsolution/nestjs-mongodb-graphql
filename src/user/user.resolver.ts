@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   CreateUserInput,
@@ -19,9 +20,13 @@ export class UserResolver {
     return this.userService.create(input);
   }
 
-  @Query(() => User)
-  getUser(@Args('input') input: GetUserInput): Promise<User | null> {
-    return this.userService.getUser(input);
+  @Query(() => User, { nullable: true })
+  async getUser(@Args('input') input: GetUserInput): Promise<User | null> {
+    const user = await this.userService.getUser(input);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   @Query(() => PaginatedUser)
