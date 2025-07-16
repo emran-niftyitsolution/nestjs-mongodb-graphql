@@ -1,6 +1,10 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
-import { LoginInput, LoginResponse } from './dtos/auth.input';
+import {
+  LoginInput,
+  LoginResponse,
+  RefreshTokenInput,
+} from './dtos/auth.input';
 
 @Resolver()
 export class AuthResolver {
@@ -9,5 +13,12 @@ export class AuthResolver {
   @Mutation(() => LoginResponse, { description: 'Login and get JWT token' })
   async login(@Args('input') input: LoginInput): Promise<LoginResponse> {
     return this.authService.login(input);
+  }
+
+  @Mutation(() => LoginResponse, { description: 'Refresh JWT tokens' })
+  async refreshToken(
+    @Args('input') input: RefreshTokenInput,
+  ): Promise<LoginResponse> {
+    return this.authService.refreshToken(input);
   }
 }

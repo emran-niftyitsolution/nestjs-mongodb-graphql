@@ -3,7 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { UserService } from '../user/user.service';
-import { LoginInput, LoginResponse } from './dtos/auth.input';
+import {
+  LoginInput,
+  LoginResponse,
+  RefreshTokenInput,
+} from './dtos/auth.input';
 import { JwtPayload } from './interfaces/jwt.interface';
 
 @Injectable()
@@ -54,5 +58,21 @@ export class AuthService {
       }),
       user,
     };
+  }
+
+  async refreshToken(input: RefreshTokenInput): Promise<LoginResponse> {
+    try {
+      const payload = this.jwtService.verify<JwtPayload>(input.refreshToken, {
+        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+      });
+      const user = await this.userService.getUser({ _id: payload.sub });
+      if (!user) throw new UnauthorizedException('Invalid refresh token');
+      return {
+        ...this.getTokens({ sub: user._id, email: user.email }),
+        user,
+      };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 }

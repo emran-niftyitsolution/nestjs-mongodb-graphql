@@ -26,3 +26,11 @@ export class LoginResponse {
   @Field(() => User, { nullable: true })
   user?: User;
 }
+
+@InputType()
+export class RefreshTokenInput {
+  @IsNotEmpty()
+  @IsString()
+  @Field(() => String)
+  refreshToken: string;
+}
