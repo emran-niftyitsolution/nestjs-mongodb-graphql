@@ -345,7 +345,7 @@ export class ActivityLogService {
     );
   }
 
-  static apply(schema: Schema<Document>): void {
+  static apply(this: void, schema: Schema<Document>): void {
     // Pre-save hook
     schema.pre('save', function (next) {
       try {
