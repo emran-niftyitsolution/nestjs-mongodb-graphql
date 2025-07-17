@@ -10,6 +10,8 @@ import { Request, Response } from 'express';
 import { Connection } from 'mongoose';
 import * as mongoosePaginateV2 from 'mongoose-paginate-v2';
 import * as mongooseUniqueValidator from 'mongoose-unique-validator';
+import { ActivityLogModule } from './activity-logs/activity-logs.module';
+import { ActivityLogService } from './activity-logs/activity-logs.service';
 import { AppResolver } from './app.resolver';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -50,6 +52,7 @@ import { UserModule } from './user/user.module';
           connection.plugin(mongooseUniqueValidator, {
             message: 'Error, expected {PATH} to be unique.',
           });
+          connection.plugin(ActivityLogService.apply);
 
           return connection;
         },
@@ -77,6 +80,7 @@ import { UserModule } from './user/user.module';
         },
       ],
     }),
+    ActivityLogModule,
     UserModule,
     AuthModule,
   ],
