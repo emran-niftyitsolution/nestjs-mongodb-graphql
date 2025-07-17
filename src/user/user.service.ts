@@ -76,6 +76,7 @@ export class UserService {
     id: Types.ObjectId,
     update: Omit<UpdateUserInput, '_id'>,
   ): Promise<User | null> {
+    console.log('🚀 ~ UserService ~ update:', update);
     if (update.password) {
       update.password = await argon2.hash(update.password); // Hash the password before updating
     }

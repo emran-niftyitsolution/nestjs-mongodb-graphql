@@ -1,5 +1,6 @@
 import {
   Field,
+  HideField,
   ID,
   InputType,
   ObjectType,
@@ -12,7 +13,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
-  IsStrongPassword,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -79,16 +79,7 @@ export class User {
   @Prop({ required: true, unique: true, trim: true })
   phone: string;
 
-  @MaxLength(32)
-  @MinLength(8)
-  @IsStrongPassword({
-    minLength: 8,
-    minLowercase: 1,
-    minUppercase: 1,
-    minNumbers: 1,
-    minSymbols: 1,
-  })
-  @IsNotBlank()
+  @HideField()
   @Prop({ required: true, minlength: 8, trim: true })
   password: string;
 

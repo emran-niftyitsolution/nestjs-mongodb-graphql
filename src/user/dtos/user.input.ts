@@ -89,6 +89,7 @@ export class UpdateUserInput extends PartialType(
     minSymbols: 1,
   })
   @IsNotBlank()
+  @IsOptional()
   password?: string;
 }
 
