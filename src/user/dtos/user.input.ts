@@ -10,7 +10,6 @@ import {
   IsMongoId,
   IsNotEmpty,
   IsOptional,
-  IsString,
   IsStrongPassword,
   Max,
   MaxLength,
@@ -19,6 +18,7 @@ import {
 } from 'class-validator';
 import { Types } from 'mongoose';
 import { PaginatedType } from 'src/common/objecttypes/pagination';
+import { IsNotBlank } from '../../common/validators/is-not-blank.validator';
 import { User } from '../schema/user.schema';
 
 @InputType()
@@ -58,8 +58,7 @@ export class CreateUserInput extends PickType(User, [
     minNumbers: 1,
     minSymbols: 1,
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotBlank()
   password: string;
 }
 
@@ -89,8 +88,7 @@ export class UpdateUserInput extends PartialType(
     minNumbers: 1,
     minSymbols: 1,
   })
-  @IsString()
-  @IsOptional()
+  @IsNotBlank()
   password?: string;
 }
 
