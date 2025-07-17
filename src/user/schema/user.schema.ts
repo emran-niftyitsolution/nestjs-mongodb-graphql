@@ -108,12 +108,12 @@ export class User {
 
   @IsOptional()
   @Field(() => String, { nullable: true })
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: false })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User' })
   createdBy?: Types.ObjectId;
 
   @IsOptional()
   @Field(() => Date, { nullable: true })
-  @Prop({ required: false })
+  @Prop()
   lastActiveAt?: Date;
 
   @IsNotEmpty()
