@@ -321,10 +321,16 @@ export class ActivityLogService {
       ...Object.keys(diff.deleted ?? {}),
     ];
 
+    const SENSITIVE_FIELDS = ['password'];
     const beforeFiltered: Record<string, unknown> = {};
     const afterFiltered: Record<string, unknown> = {};
 
     for (const key of changedKeys) {
+      if (SENSITIVE_FIELDS.includes(key)) {
+        beforeFiltered[key] = key in before ? '*****' : undefined;
+        afterFiltered[key] = key in after ? '*****' : undefined;
+        continue;
+      }
       beforeFiltered[key] = before[key];
       afterFiltered[key] = after[key];
     }
