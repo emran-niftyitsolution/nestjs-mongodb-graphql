@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { detailedDiff } from 'deep-object-diff';
-import { Document, Model, Schema, Types } from 'mongoose';
+import { detailedDiff, DetailedDiff } from 'deep-object-diff';
+import { Document, Model, Schema } from 'mongoose';
 import { RequestContext } from 'nestjs-request-context';
 import {
   ActivityLog,
@@ -14,9 +14,16 @@ export enum LogActionType {
   DELETE = 'DELETE',
 }
 
+interface IRequestContext {
+  body?: any;
+  user?: { _id?: string };
+}
+
 @Injectable()
 export class ActivityLogService {
-  private static activityLogModel: Model<ActivityLogDocument>;
+  static activityLogModel: Model<ActivityLogDocument>;
+  static previousData: Record<string, unknown> | undefined;
+  static updatedObject: Record<string, unknown> | undefined;
 
   constructor(
     @InjectModel(ActivityLog.name)
@@ -25,317 +32,337 @@ export class ActivityLogService {
     ActivityLogService.activityLogModel = activityLogModel;
   }
 
-  /**
-   * Extracts req, user, and body from the current request context.
-   */
-  private static extractContext() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const ctx = RequestContext.currentContext as
-      | { req?: { user?: unknown; body?: unknown } }
-      | undefined;
-    const req = ctx?.req;
-    const user = req?.user ?? null;
-    const body = req?.body ?? null;
-    return { req, user, body };
-  }
-
-  /**
-   * Returns the diff between two objects.
-   */
-  private static getChanges(
+  static getChanges(
     before: Record<string, unknown>,
     after: Record<string, unknown>,
-  ): Record<string, unknown> {
-    const diffFn = detailedDiff as unknown;
-    if (typeof diffFn === 'function') {
-      const diff = (diffFn as (a: any, b: any) => unknown)(before, after);
-      if (diff && typeof diff === 'object' && !Array.isArray(diff)) {
-        return diff as Record<string, unknown>;
-      }
-    }
-    return {};
+  ): DetailedDiff {
+    return detailedDiff(before, after);
   }
 
-  /**
-   * Creates an activity log entry.
-   */
-  private static async createLog(
+  static async createLog(
     action: LogActionType,
-    collectionName: string,
+    modelName: string,
     documentId: string,
-    changes: Record<string, unknown> | null,
-    payloadVars: Record<string, unknown> | null,
-    body: Record<string, unknown> | null,
-    user: { _id?: string | Types.ObjectId } | null,
+    diffObject: unknown,
   ) {
-    if (collectionName === 'activitylogs') return;
-    let payloadValue: Record<string, unknown> = {};
-    if (payloadVars && typeof payloadVars === 'object') {
-      payloadValue = payloadVars;
-    } else if (body && typeof body === 'object') {
-      payloadValue = body;
-    }
-    let userId: Types.ObjectId | null = null;
-    if (user && typeof user === 'object' && '_id' in user && user._id) {
-      if (user._id instanceof Types.ObjectId) {
-        userId = user._id;
-      } else if (
-        typeof user._id === 'string' &&
-        Types.ObjectId.isValid(user._id)
-      ) {
-        userId = new Types.ObjectId(user._id);
-      }
-    }
-    const payload = {
-      collectionName,
-      action,
-      user: userId,
-      documentId: documentId ?? null,
-      payload: payloadValue,
-      changes: changes ?? null,
-    };
-    await this.activityLogModel.create(payload);
-  }
+    const req = RequestContext.currentContext.req as IRequestContext;
+    const body = (req?.body ?? {}) as Record<string, unknown>;
+    const user = req?.user as { _id?: string } | undefined;
 
-  /**
-   * Mongoose plugin: attaches hooks for logging create, update, and delete actions.
-   */
-  static apply(this: void, schema: Schema<Document>) {
-    function safeUpdate(update: unknown): Record<string, unknown> {
-      if (!update || typeof update !== 'object' || Array.isArray(update))
-        return {};
-      return update as Record<string, unknown>;
-    }
-    schema.pre('updateOne', async function (next) {
-      await ActivityLogService.preSchema(
-        this.getQuery(),
-        safeUpdate(this.getUpdate()),
-        this.model,
-        next,
-      );
-    });
-    schema.pre('findOneAndUpdate', async function (next) {
-      await ActivityLogService.preSchema(
-        this.getQuery(),
-        safeUpdate(this.getUpdate()),
-        this.model,
-        next,
-      );
-    });
-    schema.pre('replaceOne', async function (next) {
-      await ActivityLogService.preSchema(
-        this.getQuery(),
-        safeUpdate(this.getUpdate()),
-        this.model,
-        next,
-      );
-    });
-    schema.pre('findOneAndReplace', async function (next) {
-      await ActivityLogService.preSchema(
-        this.getQuery(),
-        safeUpdate(this.getUpdate()),
-        this.model,
-        next,
-      );
-    });
-    // Post hooks: log changes (fire-and-forget)
-    function postHook(action: LogActionType) {
-      return function (doc: Document, next: () => void) {
-        next();
-        void ActivityLogService.postSchema(action, {}, doc, () => {});
+    if (modelName === 'activitylogs') return;
+
+    let payloadVariables: Record<string, unknown> | undefined;
+    if (
+      body &&
+      typeof body === 'object' &&
+      'variables' in body &&
+      (body as { variables?: unknown }).variables &&
+      typeof (body as { variables?: unknown }).variables === 'object'
+    ) {
+      const safeVariables = {
+        ...(body as { variables: Record<string, unknown> }).variables,
       };
+      for (const key of Object.keys(safeVariables)) {
+        if (key === 'refreshTokenInput') {
+          return;
+        }
+        const variableValue = safeVariables[key] as Record<string, unknown>;
+        if (
+          variableValue &&
+          typeof variableValue === 'object' &&
+          'password' in variableValue
+        ) {
+          (variableValue as { password?: string }).password = '*****';
+        }
+      }
+      payloadVariables = safeVariables;
     }
-    schema.post('save', postHook(LogActionType.CREATE));
-    schema.post('updateOne', function (doc: Document, next) {
-      next();
-      void ActivityLogService.postSchema(
-        LogActionType.UPDATE,
-        safeUpdate(this.getUpdate()),
-        doc,
-        () => {},
-      );
-    });
-    schema.post('findOneAndUpdate', function (doc: Document, next) {
-      next();
-      void ActivityLogService.postSchema(
-        LogActionType.UPDATE,
-        safeUpdate(this.getUpdate()),
-        doc,
-        () => {},
-      );
-    });
-    schema.post('replaceOne', function (doc: Document, next) {
-      next();
-      void ActivityLogService.postSchema(
-        LogActionType.UPDATE,
-        safeUpdate(this.getUpdate()),
-        doc,
-        () => {},
-      );
-    });
-    schema.post('findOneAndReplace', function (doc: Document, next) {
-      next();
-      void ActivityLogService.postSchema(
-        LogActionType.UPDATE,
-        safeUpdate(this.getUpdate()),
-        doc,
-        () => {},
-      );
-    });
-    schema.post('deleteOne', postHook(LogActionType.DELETE));
-    schema.post('findOneAndDelete', postHook(LogActionType.DELETE));
+
+    const payload = {
+      collectionName: modelName,
+      action: action,
+      user: user?._id ?? null,
+      documentId: documentId ?? null,
+      payload: payloadVariables
+        ? payloadVariables
+        : Object.keys(body).length
+          ? body
+          : null,
+      changes: diffObject ?? null,
+    };
+
+    if (modelName) {
+      await this.activityLogModel.create(payload);
+    }
   }
 
-  /**
-   * Pre-hook: gathers previous data for diffing.
-   */
-  private static async preSchema(
+  static async preSchema(
     query: Record<string, unknown>,
     updatedObject: Record<string, unknown>,
     model: Model<any>,
     next: () => void,
   ) {
-    const keys = Object.keys(updatedObject).filter(
+    const keys = Object.keys(updatedObject ?? {}).filter(
       (key) => !key.startsWith('$'),
     );
-    if (!keys.includes('updatedAt')) keys.push('updatedAt');
-    const result = await model.findOne(query).select(keys).lean();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    (this as any)._previousData = Array.isArray(result)
-      ? result[0] || {}
-      : result || {};
+
+    if (!keys.includes('updatedAt')) {
+      keys.push('updatedAt');
+    }
+
+    if (model && typeof model.findOne === 'function') {
+      const found = await model.findOne(query).select(keys).lean();
+      ActivityLogService.previousData =
+        found && typeof found === 'object' && !Array.isArray(found)
+          ? (found as Record<string, unknown>)
+          : undefined;
+    } else {
+      ActivityLogService.previousData = undefined;
+    }
+
     next();
   }
 
-  /**
-   * Post-hook: logs after operation (used by post hooks).
-   */
-  private static async postSchema(
+  static async postSchema(
     action: LogActionType,
-    updatedObject: Record<string, unknown>,
+    updatedObject: unknown,
     doc: unknown,
     next: () => void,
   ) {
-    if (!doc || typeof doc !== 'object') return next();
-    const { user, body } = this.extractContext();
-    function getPreviousData(ctx: unknown): Record<string, unknown> {
-      if (
-        ctx &&
-        typeof ctx === 'object' &&
-        Object.prototype.hasOwnProperty.call(ctx, '_previousData')
-      ) {
-        const val = (ctx as { _previousData?: unknown })._previousData;
-        if (val && typeof val === 'object' && !Array.isArray(val)) {
-          return val as Record<string, unknown>;
-        }
-      }
-      return {};
+    if (!doc) {
+      next();
+      return;
     }
-    const previousData = getPreviousData(this);
-    let changes: Record<string, unknown> = {};
+
+    let changes: {
+      before: Record<string, unknown>;
+      after: Record<string, unknown>;
+    } = {
+      before: {},
+      after: {},
+    };
+
     if (action === LogActionType.CREATE) {
-      changes['added'] = JSON.parse(JSON.stringify(doc));
-    } else if (action === LogActionType.UPDATE) {
-      const beforeRawVal = previousData
-        ? (JSON.parse(JSON.stringify(previousData)) as unknown)
-        : {};
-      const afterRawVal = updatedObject
-        ? (JSON.parse(JSON.stringify(updatedObject)) as unknown)
-        : {};
-      const before =
-        beforeRawVal &&
-        typeof beforeRawVal === 'object' &&
-        !Array.isArray(beforeRawVal)
-          ? (beforeRawVal as Record<string, unknown>)
-          : ({} as Record<string, unknown>);
-      const after =
-        afterRawVal &&
-        typeof afterRawVal === 'object' &&
-        !Array.isArray(afterRawVal)
-          ? (afterRawVal as Record<string, unknown>)
-          : ({} as Record<string, unknown>);
-      if (Object.keys(before).length) {
-        changes = this.getChanges(before, after);
-      } else {
-        // If no before, just show updated
-        changes = { updated: after };
-      }
-      // Rename $setOnInsert to before and $set to after in the 'updated' property if present
+      const docObj = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>;
+      changes = { before: docObj, after: docObj };
+    }
+
+    if (action === LogActionType.UPDATE) {
+      let safeSet: Record<string, unknown> = {};
       if (
-        changes.updated &&
-        typeof changes.updated === 'object' &&
-        changes.updated !== null
+        updatedObject &&
+        typeof updatedObject === 'object' &&
+        '$set' in (updatedObject as Record<string, unknown>) &&
+        (updatedObject as Record<string, unknown>)['$set'] &&
+        typeof (updatedObject as Record<string, unknown>)['$set'] === 'object'
       ) {
-        const updated = changes.updated as Record<string, unknown>;
-        const renamed: Record<string, unknown> = {};
-        if ('$setOnInsert' in updated) {
-          renamed.before = updated['$setOnInsert'];
-          delete updated['$setOnInsert'];
-        }
-        if ('$set' in updated) {
-          renamed.after = updated['$set'];
-          delete updated['$set'];
-        }
-        // Copy any other properties
-        for (const key of Object.keys(updated)) {
-          if (key !== 'before' && key !== 'after') {
-            renamed[key] = updated[key];
-          }
-        }
-        changes.updated = renamed;
+        safeSet = (updatedObject as Record<string, { [key: string]: unknown }>)[
+          '$set'
+        ] as Record<string, unknown>;
       }
-    } else if (action === LogActionType.DELETE) {
-      changes['deleted'] = JSON.parse(JSON.stringify(doc));
-    }
-    let payloadVars: Record<string, unknown> | null = null;
-    if (
-      body &&
-      typeof body === 'object' &&
-      'variables' in body &&
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      typeof (body as any).variables === 'object' &&
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (body as any).variables !== null
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      payloadVars = { ...(body as any).variables } as Record<string, unknown>;
-      for (const key of Object.keys(payloadVars)) {
-        if (key === 'refreshTokenInput') return next();
-        const val = payloadVars[key] as Record<string, unknown>;
-        if (val && typeof val === 'object' && 'password' in val) {
-          val.password = '*****';
-        }
+      ActivityLogService.updatedObject = safeSet;
+
+      const before = ActivityLogService.previousData
+        ? (JSON.parse(
+            JSON.stringify(ActivityLogService.previousData),
+          ) as Record<string, unknown>)
+        : {};
+      const after = safeSet
+        ? (JSON.parse(JSON.stringify(safeSet)) as Record<string, unknown>)
+        : {};
+
+      // Only include changed fields in before/after
+      const diff = ActivityLogService.getChanges(before, after);
+      const changedKeys = [
+        ...Object.keys(diff.added || {}),
+        ...Object.keys(diff.updated || {}),
+        ...Object.keys(diff.deleted || {}),
+      ];
+      const beforeFiltered: Record<string, unknown> = {};
+      const afterFiltered: Record<string, unknown> = {};
+      for (const key of changedKeys) {
+        if (!(key in after)) continue;
+        beforeFiltered[key] = before[key];
+        afterFiltered[key] = after[key];
       }
+      changes = { before: beforeFiltered, after: afterFiltered };
     }
-    let collectionName = '';
-    let documentId = '';
-    if (
-      'collection' in doc &&
-      doc.collection &&
-      typeof doc.collection === 'object' &&
-      'name' in doc.collection
-    ) {
-      collectionName = (doc.collection as { name?: string }).name ?? '';
-    } else if ('collectionName' in doc) {
-      collectionName =
-        (doc as { collectionName?: string }).collectionName ?? '';
+
+    if (action === LogActionType.DELETE) {
+      const docObj = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>;
+      changes = { before: docObj, after: docObj };
     }
-    if ('_id' in doc) {
-      documentId = (doc as { _id?: string })._id ?? '';
-    }
+
     if (changes && Object.keys(changes).length) {
-      await this.createLog(
+      let collectionName = '';
+      if (
+        doc &&
+        typeof doc === 'object' &&
+        'collection' in (doc as Record<string, unknown>) &&
+        (doc as Record<string, unknown>).collection &&
+        typeof (doc as Record<string, unknown>).collection === 'object' &&
+        'name' in (doc as { collection?: { name?: string } }).collection!
+      ) {
+        collectionName =
+          (
+            (doc as { collection?: { name?: string } }).collection as {
+              name?: string;
+            }
+          ).name || '';
+      } else if (
+        doc &&
+        typeof doc === 'object' &&
+        'collectionName' in (doc as Record<string, unknown>)
+      ) {
+        collectionName =
+          (doc as { collectionName?: string }).collectionName || '';
+      }
+      const docId =
+        doc &&
+        typeof doc === 'object' &&
+        '_id' in (doc as Record<string, unknown>)
+          ? (doc as { _id?: string })._id || ''
+          : '';
+      await ActivityLogService.createLog(
         action,
         collectionName,
-        documentId,
+        docId,
         changes,
-        payloadVars ?? null,
-        body && typeof body === 'object'
-          ? (body as Record<string, unknown>)
-          : ({} as Record<string, unknown>),
-        user ?? null,
       );
     }
+
     next();
+  }
+
+  static apply(schema: Schema<Document>) {
+    // schema.pre
+    schema.pre('save', async function (next) {
+      ActivityLogService.updatedObject = this.isNew ? {} : this.getChanges();
+      await Promise.resolve(); // ensure at least one await for async
+      next();
+    });
+
+    schema.pre('updateOne', async function (next) {
+      const query = this.getQuery();
+      const update = this.getUpdate();
+      const model = this.model;
+      await ActivityLogService.preSchema(
+        query,
+        update && typeof update === 'object' && !Array.isArray(update)
+          ? update
+          : {},
+        model,
+        next,
+      );
+    });
+
+    schema.pre('findOneAndUpdate', async function (next) {
+      const query = this.getQuery();
+      const update = this.getUpdate();
+      const model = this.model;
+      await ActivityLogService.preSchema(
+        query,
+        update && typeof update === 'object' && !Array.isArray(update)
+          ? update
+          : {},
+        model,
+        next,
+      );
+    });
+
+    schema.pre('replaceOne', async function (next) {
+      const query = this.getQuery();
+      const update = this.getUpdate();
+      const model = this.model;
+      await ActivityLogService.preSchema(
+        query,
+        update && typeof update === 'object' && !Array.isArray(update)
+          ? update
+          : {},
+        model,
+        next,
+      );
+    });
+
+    schema.pre('findOneAndReplace', async function (next) {
+      const query = this.getQuery();
+      const update = this.getUpdate();
+      const model = this.model;
+      await ActivityLogService.preSchema(
+        query,
+        update && typeof update === 'object' && !Array.isArray(update)
+          ? update
+          : {},
+        model,
+        next,
+      );
+    });
+
+    // schema post
+    schema.post('save', async function (doc: Document, next) {
+      const updatedObj = ActivityLogService.updatedObject ?? {};
+      await ActivityLogService.postSchema(
+        !Object.keys(updatedObj).length
+          ? LogActionType.CREATE
+          : LogActionType.UPDATE,
+        !Object.keys(updatedObj).length ? null : updatedObj,
+        doc,
+        next,
+      );
+    });
+
+    schema.post('updateOne', async function (doc: Document, next) {
+      await ActivityLogService.postSchema(
+        LogActionType.UPDATE,
+        this.getUpdate(),
+        doc,
+        next,
+      );
+    });
+
+    schema.post('findOneAndUpdate', async function (doc: Document, next) {
+      await ActivityLogService.postSchema(
+        LogActionType.UPDATE,
+        this.getUpdate(),
+        doc,
+        next,
+      );
+    });
+
+    schema.post('replaceOne', async function (doc: Document, next) {
+      await ActivityLogService.postSchema(
+        LogActionType.UPDATE,
+        this.getUpdate(),
+        doc,
+        next,
+      );
+    });
+
+    schema.post('findOneAndReplace', async function (doc: Document, next) {
+      await ActivityLogService.postSchema(
+        LogActionType.UPDATE,
+        this.getUpdate(),
+        doc,
+        next,
+      );
+    });
+
+    schema.post('deleteOne', async function (doc: Document, next) {
+      await ActivityLogService.postSchema(
+        LogActionType.DELETE,
+        null,
+        doc,
+        next,
+      );
+    });
+
+    schema.post('findOneAndDelete', async function (doc: Document, next) {
+      await ActivityLogService.postSchema(
+        LogActionType.DELETE,
+        null,
+        doc,
+        next,
+      );
+    });
   }
 }
