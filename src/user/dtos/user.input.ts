@@ -95,9 +95,9 @@ export class UpdateUserInput extends PartialType(
     minSymbols: 1,
   })
   @IsString()
-  @IsNotEmpty()
-  @Field(() => String)
-  password: string;
+  @IsOptional()
+  @Field(() => String, { nullable: true })
+  password?: string;
 }
 
 @InputType()

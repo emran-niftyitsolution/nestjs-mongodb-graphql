@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import {
   CreateUserInput,
   GetUserInput,
@@ -16,7 +17,11 @@ export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
   @Mutation(() => User)
-  createUser(@Args('input') input: CreateUserInput): Promise<User> {
+  createUser(
+    @Args('input') input: CreateUserInput,
+    @CurrentUser() user: User,
+  ): Promise<User> {
+    console.log(user);
     return this.userService.create(input);
   }
 

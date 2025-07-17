@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { detailedDiff } from 'deep-object-diff';
-import { Document, Model, Schema } from 'mongoose';
+import { Document, Model, Schema, Types } from 'mongoose';
 import { RequestContext } from 'nestjs-request-context';
 import {
   ActivityLog,
@@ -25,33 +25,23 @@ export class ActivityLogService {
     ActivityLogService.activityLogModel = activityLogModel;
   }
 
-  // Helper: Safely extract context, body, and user
+  /**
+   * Extracts req, user, and body from the current request context.
+   */
   private static extractContext() {
-    let ctx: unknown = undefined;
-    try {
-      if (
-        typeof RequestContext === 'object' &&
-        RequestContext !== null &&
-        'currentContext' in RequestContext
-      ) {
-        ctx = (RequestContext as Record<string, unknown>)['currentContext'];
-      }
-    } catch {
-      return { req: null, user: null, body: null };
-    }
-    if (!ctx || typeof ctx !== 'object' || !('req' in ctx))
-      return { req: null, user: null, body: null };
-    const req = (ctx as { req?: unknown }).req;
-    if (!req || typeof req !== 'object')
-      return { req: null, user: null, body: null };
-    const body = (req as { body?: unknown }).body as
-      | Record<string, unknown>
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const ctx = RequestContext.currentContext as
+      | { req?: { user?: unknown; body?: unknown } }
       | undefined;
-    const user = (req as { user?: { _id?: string } }).user;
+    const req = ctx?.req;
+    const user = req?.user ?? null;
+    const body = req?.body ?? null;
     return { req, user, body };
   }
 
-  // Helper: Get changes between two objects
+  /**
+   * Returns the diff between two objects.
+   */
   private static getChanges(
     before: Record<string, unknown>,
     after: Record<string, unknown>,
@@ -66,38 +56,56 @@ export class ActivityLogService {
     return {};
   }
 
-  // Main log creation
+  /**
+   * Creates an activity log entry.
+   */
   private static async createLog(
     action: LogActionType,
-    modelName: string,
+    collectionName: string,
     documentId: string,
-    diffObject: Record<string, unknown> | null,
+    changes: Record<string, unknown> | null,
     payloadVars: Record<string, unknown> | null,
     body: Record<string, unknown> | null,
-    user: { _id?: string } | null,
+    user: { _id?: string | Types.ObjectId } | null,
   ) {
-    if (modelName === 'activitylogs') return;
+    if (collectionName === 'activitylogs') return;
+    let payloadValue: Record<string, unknown> = {};
+    if (payloadVars && typeof payloadVars === 'object') {
+      payloadValue = payloadVars;
+    } else if (body && typeof body === 'object') {
+      payloadValue = body;
+    }
+    let userId: Types.ObjectId | null = null;
+    if (user && typeof user === 'object' && '_id' in user && user._id) {
+      if (user._id instanceof Types.ObjectId) {
+        userId = user._id;
+      } else if (
+        typeof user._id === 'string' &&
+        Types.ObjectId.isValid(user._id)
+      ) {
+        userId = new Types.ObjectId(user._id);
+      }
+    }
     const payload = {
-      target: modelName,
+      collectionName,
       action,
-      user: user && typeof user === 'object' && '_id' in user ? user._id : null,
+      user: userId,
       documentId: documentId ?? null,
-      payload: payloadVars ? payloadVars : body ? body : null,
-      changes: diffObject ?? null,
+      payload: payloadValue,
+      changes: changes ?? null,
     };
     await this.activityLogModel.create(payload);
   }
 
-  // Plugin-compatible static apply method
+  /**
+   * Mongoose plugin: attaches hooks for logging create, update, and delete actions.
+   */
   static apply(this: void, schema: Schema<Document>) {
-    // Helper: Only pass plain objects to preSchema/postSchema
     function safeUpdate(update: unknown): Record<string, unknown> {
       if (!update || typeof update !== 'object' || Array.isArray(update))
         return {};
       return update as Record<string, unknown>;
     }
-
-    // Pre hooks: gather previous data
     schema.pre('updateOne', async function (next) {
       await ActivityLogService.preSchema(
         this.getQuery(),
@@ -130,17 +138,14 @@ export class ActivityLogService {
         next,
       );
     });
-
-    // Post hooks: log changes (fire-and-forget, do not await logging)
-    schema.post('save', function (doc: Document, next) {
-      next();
-      void ActivityLogService.postSchema(
-        LogActionType.CREATE,
-        {},
-        doc,
-        () => {},
-      );
-    });
+    // Post hooks: log changes (fire-and-forget)
+    function postHook(action: LogActionType) {
+      return function (doc: Document, next: () => void) {
+        next();
+        void ActivityLogService.postSchema(action, {}, doc, () => {});
+      };
+    }
+    schema.post('save', postHook(LogActionType.CREATE));
     schema.post('updateOne', function (doc: Document, next) {
       next();
       void ActivityLogService.postSchema(
@@ -177,27 +182,13 @@ export class ActivityLogService {
         () => {},
       );
     });
-    schema.post('deleteOne', function (doc: Document, next) {
-      next();
-      void ActivityLogService.postSchema(
-        LogActionType.DELETE,
-        {},
-        doc,
-        () => {},
-      );
-    });
-    schema.post('findOneAndDelete', function (doc: Document, next) {
-      next();
-      void ActivityLogService.postSchema(
-        LogActionType.DELETE,
-        {},
-        doc,
-        () => {},
-      );
-    });
+    schema.post('deleteOne', postHook(LogActionType.DELETE));
+    schema.post('findOneAndDelete', postHook(LogActionType.DELETE));
   }
 
-  // Gather previous data for diffing (used by pre hooks)
+  /**
+   * Pre-hook: gathers previous data for diffing.
+   */
   private static async preSchema(
     query: Record<string, unknown>,
     updatedObject: Record<string, unknown>,
@@ -216,7 +207,9 @@ export class ActivityLogService {
     next();
   }
 
-  // Log after operation (used by post hooks)
+  /**
+   * Post-hook: logs after operation (used by post hooks).
+   */
   private static async postSchema(
     action: LogActionType,
     updatedObject: Record<string, unknown>,
@@ -224,9 +217,7 @@ export class ActivityLogService {
     next: () => void,
   ) {
     if (!doc || typeof doc !== 'object') return next();
-    // Extract context, user, body
     const { user, body } = this.extractContext();
-    // Helper to safely get _previousData from this
     function getPreviousData(ctx: unknown): Record<string, unknown> {
       if (
         ctx &&
@@ -240,7 +231,6 @@ export class ActivityLogService {
       }
       return {};
     }
-    // Get previous data from preSchema
     const previousData = getPreviousData(this);
     let changes: Record<string, unknown> = {};
     if (action === LogActionType.CREATE) {
@@ -264,21 +254,51 @@ export class ActivityLogService {
         !Array.isArray(afterRawVal)
           ? (afterRawVal as Record<string, unknown>)
           : ({} as Record<string, unknown>);
-      changes = Object.keys(before).length
-        ? this.getChanges(before, after)
-        : { updated: after };
+      if (Object.keys(before).length) {
+        changes = this.getChanges(before, after);
+      } else {
+        // If no before, just show updated
+        changes = { updated: after };
+      }
+      // Rename $setOnInsert to before and $set to after in the 'updated' property if present
+      if (
+        changes.updated &&
+        typeof changes.updated === 'object' &&
+        changes.updated !== null
+      ) {
+        const updated = changes.updated as Record<string, unknown>;
+        const renamed: Record<string, unknown> = {};
+        if ('$setOnInsert' in updated) {
+          renamed.before = updated['$setOnInsert'];
+          delete updated['$setOnInsert'];
+        }
+        if ('$set' in updated) {
+          renamed.after = updated['$set'];
+          delete updated['$set'];
+        }
+        // Copy any other properties
+        for (const key of Object.keys(updated)) {
+          if (key !== 'before' && key !== 'after') {
+            renamed[key] = updated[key];
+          }
+        }
+        changes.updated = renamed;
+      }
     } else if (action === LogActionType.DELETE) {
       changes['deleted'] = JSON.parse(JSON.stringify(doc));
     }
-    // Mask sensitive fields in payload
     let payloadVars: Record<string, unknown> | null = null;
     if (
       body &&
+      typeof body === 'object' &&
       'variables' in body &&
-      typeof body.variables === 'object' &&
-      body.variables !== null
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      typeof (body as any).variables === 'object' &&
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (body as any).variables !== null
     ) {
-      payloadVars = { ...body.variables } as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      payloadVars = { ...(body as any).variables } as Record<string, unknown>;
       for (const key of Object.keys(payloadVars)) {
         if (key === 'refreshTokenInput') return next();
         const val = payloadVars[key] as Record<string, unknown>;
@@ -287,8 +307,7 @@ export class ActivityLogService {
         }
       }
     }
-    // Get model name and document id
-    let modelName = '';
+    let collectionName = '';
     let documentId = '';
     if (
       'collection' in doc &&
@@ -296,9 +315,10 @@ export class ActivityLogService {
       typeof doc.collection === 'object' &&
       'name' in doc.collection
     ) {
-      modelName = (doc.collection as { name?: string }).name ?? '';
-    } else if ('target' in doc) {
-      modelName = (doc as { target?: string }).target ?? '';
+      collectionName = (doc.collection as { name?: string }).name ?? '';
+    } else if ('collectionName' in doc) {
+      collectionName =
+        (doc as { collectionName?: string }).collectionName ?? '';
     }
     if ('_id' in doc) {
       documentId = (doc as { _id?: string })._id ?? '';
@@ -306,11 +326,13 @@ export class ActivityLogService {
     if (changes && Object.keys(changes).length) {
       await this.createLog(
         action,
-        modelName,
+        collectionName,
         documentId,
         changes,
         payloadVars ?? null,
-        body ?? null,
+        body && typeof body === 'object'
+          ? (body as Record<string, unknown>)
+          : ({} as Record<string, unknown>),
         user ?? null,
       );
     }

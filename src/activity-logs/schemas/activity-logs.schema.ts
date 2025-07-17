@@ -7,7 +7,7 @@ import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 export class ActivityLog {
   @Prop({ required: true })
   @Field({ description: 'The collection name' })
-  target: string;
+  collectionName: string;
 
   @Prop({ required: true })
   @Field({ description: 'The action performed' })

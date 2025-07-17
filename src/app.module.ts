@@ -10,6 +10,7 @@ import { Request, Response } from 'express';
 import { Connection } from 'mongoose';
 import * as mongoosePaginateV2 from 'mongoose-paginate-v2';
 import * as mongooseUniqueValidator from 'mongoose-unique-validator';
+import { RequestContextModule } from 'nestjs-request-context';
 import { ActivityLogModule } from './activity-logs/activity-logs.module';
 import { ActivityLogService } from './activity-logs/activity-logs.service';
 import { AppResolver } from './app.resolver';
@@ -24,6 +25,7 @@ import { UserModule } from './user/user.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    RequestContextModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
