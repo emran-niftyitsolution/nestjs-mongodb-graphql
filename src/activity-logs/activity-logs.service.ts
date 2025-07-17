@@ -129,9 +129,29 @@ export class ActivityLogService {
 
   private extractDocumentId(doc: unknown): string {
     if (!doc || typeof doc !== 'object' || doc === null) return '';
-
     const docObj = doc as Record<string, unknown>;
-    return typeof docObj._id === 'string' ? docObj._id : '';
+    const id = docObj._id;
+    if (typeof id === 'string') return id;
+    // Handle MongoDB extended JSON
+    if (
+      id &&
+      typeof id === 'object' &&
+      id !== null &&
+      Object.prototype.hasOwnProperty.call(id, '$oid') &&
+      typeof (id as { $oid?: unknown }).$oid === 'string'
+    ) {
+      return (id as { $oid: string }).$oid;
+    }
+    // Handle Mongoose ObjectId (has a toString method)
+    if (
+      id &&
+      typeof id === 'object' &&
+      typeof (id as { toString: () => string }).toString === 'function'
+    ) {
+      const str = (id as { toString: () => string }).toString();
+      if (str && str !== '[object Object]') return str;
+    }
+    return '';
   }
 
   async createLog(
