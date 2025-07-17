@@ -57,7 +57,6 @@ export class User {
   @MinLength(2)
   @IsString()
   @IsNotEmpty()
-  @Field(() => String)
   @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
   firstName: string;
 
@@ -65,25 +64,21 @@ export class User {
   @MinLength(2)
   @IsString()
   @IsNotEmpty()
-  @Field(() => String)
   @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
   lastName: string;
 
   @IsEmail()
   @IsNotEmpty()
-  @Field(() => String)
   @Prop({ required: true, unique: true, trim: true, lowercase: true })
   email: string;
 
   @IsString()
   @IsNotEmpty()
-  @Field(() => String)
   @Prop({ required: true, unique: true, trim: true, lowercase: true })
   username: string;
 
   @IsPhoneNumber()
   @IsNotEmpty()
-  @Field(() => String)
   @Prop({ required: true, unique: true, trim: true })
   phone: string;
 
@@ -102,29 +97,23 @@ export class User {
   password: string;
 
   @IsNotEmpty()
-  @Field(() => Gender)
   @Prop({ type: String, enum: Gender })
   gender: Gender;
 
   @IsOptional()
-  @Field(() => String, { nullable: true })
+  @Field(() => ID)
   @Prop({ type: SchemaTypes.ObjectId, ref: 'User' })
   createdBy?: Types.ObjectId;
 
   @IsOptional()
-  @Field(() => Date, { nullable: true })
   @Prop()
   lastActiveAt?: Date;
 
   @IsNotEmpty()
-  @Field(() => UserStatus)
   @Prop({ type: String, enum: UserStatus, default: UserStatus.PENDING })
   status: UserStatus;
 
-  @Field(() => Date)
   createdAt: Date;
-
-  @Field(() => Date)
   updatedAt: Date;
 }
 

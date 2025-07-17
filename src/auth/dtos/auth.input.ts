@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { User } from '../../user/schema/user.schema';
 
@@ -6,31 +6,25 @@ import { User } from '../../user/schema/user.schema';
 export class LoginInput {
   @IsNotEmpty()
   @IsString()
-  @Field(() => String)
   username: string;
 
   @IsNotEmpty()
   @IsString()
-  @Field(() => String)
   password: string;
 }
 
 @ObjectType()
 export class LoginResponse {
-  @Field(() => String)
   accessToken: string;
 
-  @Field(() => String)
   refreshToken: string;
 
-  @Field(() => User, { nullable: true })
-  user?: User;
+  user: User;
 }
 
 @InputType()
 export class RefreshTokenInput {
   @IsNotEmpty()
   @IsString()
-  @Field(() => String)
   refreshToken: string;
 }

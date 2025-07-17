@@ -2,7 +2,6 @@ import {
   Field,
   ID,
   InputType,
-  Int,
   ObjectType,
   PartialType,
   PickType,
@@ -30,17 +29,14 @@ export class PaginateUserInput extends PartialType(
   PickType(User, ['gender', 'status']),
 ) {
   @IsOptional()
-  @Field(() => String, { nullable: true })
   search?: string;
 
   @Min(1)
   @IsOptional()
-  @Field(() => Int, { nullable: true })
   page?: number;
 
   @Max(100)
   @IsOptional()
-  @Field(() => Int, { nullable: true })
   limit?: number;
 }
 
@@ -64,7 +60,6 @@ export class CreateUserInput extends PickType(User, [
   })
   @IsString()
   @IsNotEmpty()
-  @Field(() => String)
   password: string;
 }
 
@@ -96,7 +91,6 @@ export class UpdateUserInput extends PartialType(
   })
   @IsString()
   @IsOptional()
-  @Field(() => String, { nullable: true })
   password?: string;
 }
 
