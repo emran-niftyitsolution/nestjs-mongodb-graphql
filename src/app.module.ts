@@ -2,7 +2,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -18,6 +18,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { GqlAuthGuard } from './common/guards/gql-auth.guard';
 import { GqlThrottlerGuard } from './common/guards/graphq-throttler.guard';
+import { TrimPipe } from './common/pipes/trim.pipe';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -96,6 +97,10 @@ import { UserModule } from './user/user.module';
     {
       provide: APP_GUARD,
       useClass: GqlAuthGuard,
+    },
+    {
+      provide: APP_PIPE,
+      useClass: TrimPipe,
     },
   ],
 })

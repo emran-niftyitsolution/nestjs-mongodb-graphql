@@ -1,13 +1,15 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { IsNotBlank } from '../../common/validators/is-not-blank.validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { User } from '../../user/schema/user.schema';
 
 @InputType()
 export class LoginInput {
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   username: string;
 
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   password: string;
 }
 
@@ -20,6 +22,7 @@ export class LoginResponse {
 
 @InputType()
 export class RefreshTokenInput {
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   refreshToken: string;
 }

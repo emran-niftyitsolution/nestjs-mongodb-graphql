@@ -13,11 +13,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
+  IsString,
   MaxLength,
   MinLength,
 } from 'class-validator';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
-import { IsNotBlank } from '../../common/validators/is-not-blank.validator';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -49,33 +49,39 @@ registerEnumType(UserStatus, {
 })
 export class User {
   @IsMongoId()
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   @Field(() => ID)
   _id: Types.ObjectId;
 
   @MaxLength(20)
   @MinLength(2)
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
   firstName: string;
 
   @MaxLength(20)
   @MinLength(2)
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
   lastName: string;
 
   @IsEmail()
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   @Prop({ required: true, unique: true, trim: true, lowercase: true })
   email: string;
 
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   @Prop({ required: true, unique: true, trim: true, lowercase: true })
   username: string;
 
   @IsPhoneNumber()
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   @Prop({ required: true, unique: true, trim: true })
   phone: string;
 
@@ -83,7 +89,8 @@ export class User {
   @Prop({ required: true, minlength: 8, trim: true })
   password: string;
 
-  @IsNotBlank()
+  @IsString()
+  @IsNotEmpty()
   @Prop({ type: String, enum: Gender })
   gender: Gender;
 
