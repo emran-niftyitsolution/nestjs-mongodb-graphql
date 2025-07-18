@@ -7,6 +7,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { Request, Response } from 'express';
+import { GraphQLError } from 'graphql';
 import { Connection } from 'mongoose';
 import * as mongoosePaginateV2 from 'mongoose-paginate-v2';
 import * as mongooseUniqueValidator from 'mongoose-unique-validator';
@@ -75,6 +76,28 @@ import { UserModule } from './user/user.module';
         req: Request;
         res: Response;
       }): { req: Request; res: Response } => ({ req, res }),
+      formatError: (error: GraphQLError) => {
+        const { extensions, message, path } = error;
+        const formattedError = {
+          path,
+          error: message,
+          message:
+            typeof extensions?.originalError === 'object' &&
+            extensions?.originalError !== null &&
+            'message' in extensions.originalError
+              ? (extensions.originalError as { message?: string }).message ||
+                message
+              : message,
+          status: extensions?.code || 'INTERNAL_SERVER_ERROR',
+          statusCode:
+            typeof extensions?.originalError === 'object' &&
+            extensions?.originalError !== null &&
+            'statusCode' in extensions.originalError
+              ? (extensions.originalError as { statusCode?: number }).statusCode
+              : null,
+        };
+        return formattedError;
+      },
     }),
     ThrottlerModule.forRoot({
       throttlers: [
