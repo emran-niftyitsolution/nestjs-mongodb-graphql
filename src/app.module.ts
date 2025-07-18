@@ -18,6 +18,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { GqlAuthGuard } from './common/guards/gql-auth.guard';
 import { GqlThrottlerGuard } from './common/guards/graphq-throttler.guard';
+import { RolesGuard } from './common/guards/roles.guard';
 import { TrimPipe } from './common/pipes/trim.pipe';
 import { UserModule } from './user/user.module';
 
@@ -91,6 +92,10 @@ import { UserModule } from './user/user.module';
     AppService,
     AppResolver,
     {
+      provide: APP_PIPE,
+      useClass: TrimPipe,
+    },
+    {
       provide: APP_GUARD,
       useClass: GqlThrottlerGuard,
     },
@@ -99,8 +104,8 @@ import { UserModule } from './user/user.module';
       useClass: GqlAuthGuard,
     },
     {
-      provide: APP_PIPE,
-      useClass: TrimPipe,
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })

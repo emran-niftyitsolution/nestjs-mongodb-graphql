@@ -18,19 +18,14 @@ export class UserService {
   queryBuilder(user: Partial<User>) {
     const query = {
       ...(user._id && { _id: user._id }),
-      ...(user.firstName && {
-        firstName: { $regex: user.firstName, $options: 'i' },
-      }),
-      ...(user.lastName && {
-        lastName: { $regex: user.lastName, $options: 'i' },
-      }),
-      ...(user.email && { email: { $regex: user.email, $options: 'i' } }),
-      ...(user.username && {
-        username: { $regex: user.username, $options: 'i' },
-      }),
-      ...(user.phone && { phone: { $regex: user.phone, $options: 'i' } }),
+      ...(user.firstName && { firstName: user.firstName }),
+      ...(user.lastName && { lastName: user.lastName }),
+      ...(user.email && { email: user.email }),
+      ...(user.username && { username: user.username }),
+      ...(user.phone && { phone: user.phone }),
       ...(user.gender && { gender: user.gender }),
       ...(user.status && { status: user.status }),
+      ...(user.role && { role: user.role }),
     };
 
     return query;
@@ -47,6 +42,7 @@ export class UserService {
 
   async getUser(input: Partial<User>): Promise<User | null> {
     const query = this.queryBuilder(input);
+    console.log('🚀 ~ UserService ~ getUser ~ query:', query);
     return this.userModel.findOne(query);
   }
 
