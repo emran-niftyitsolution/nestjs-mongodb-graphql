@@ -42,7 +42,6 @@ export class UserService {
 
   async getUser(input: Partial<User>): Promise<User | null> {
     const query = this.queryBuilder(input);
-    console.log('🚀 ~ UserService ~ getUser ~ query:', query);
     return this.userModel.findOne(query);
   }
 
