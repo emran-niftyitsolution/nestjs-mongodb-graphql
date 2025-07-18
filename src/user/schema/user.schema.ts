@@ -42,6 +42,16 @@ registerEnumType(UserStatus, {
   name: 'UserStatus',
 });
 
+export enum UserRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+}
+
+registerEnumType(UserRole, {
+  name: 'UserRole',
+});
+
 @InputType('UserInput')
 @ObjectType()
 @Schema({
@@ -93,6 +103,12 @@ export class User {
   @IsNotEmpty()
   @Prop({ type: String, enum: Gender })
   gender: Gender;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @Prop({ type: String, enum: UserRole, default: UserRole.USER })
+  role?: UserRole;
 
   @IsOptional()
   @Field(() => ID)
