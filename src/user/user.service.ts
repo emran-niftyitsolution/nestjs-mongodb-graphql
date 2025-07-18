@@ -69,14 +69,13 @@ export class UserService {
 
   async updateUser(
     id: Types.ObjectId,
-    update: Omit<UpdateUserInput, '_id'>,
+    input: Omit<UpdateUserInput, '_id'>,
   ): Promise<User | null> {
-    console.log('🚀 ~ UserService ~ update:', update);
-    if (update.password) {
-      update.password = await argon2.hash(update.password); // Hash the password before updating
+    if (input.password) {
+      input.password = await argon2.hash(input.password); // Hash the password before updating
     }
 
-    return this.userModel.findByIdAndUpdate(id, update, { new: true });
+    return this.userModel.findByIdAndUpdate(id, input, { new: true });
   }
 
   async softDeleteUser(id: Types.ObjectId): Promise<User | null> {
