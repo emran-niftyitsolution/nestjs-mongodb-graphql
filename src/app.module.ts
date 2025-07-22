@@ -33,11 +33,11 @@ import { UserModule } from './user/user.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_URI'),
+        uri: configService.get<string>('MONGODB_URI'),
         onConnectionCreate: (connection: Connection) => {
           const logger = new Logger('MongoDB', { timestamp: true });
           const dbName = configService
-            .get<string>('MONGO_URI')
+            .get<string>('MONGODB_URI')
             ?.split('/')
             .pop();
 
