@@ -68,7 +68,7 @@ import { UserModule } from './user/user.module';
       playground: false,
       autoSchemaFile: true,
       sortSchema: true,
-      plugins: [ApolloServerPluginLandingPageLocalDefault()],
+      plugins: [ApolloServerPluginLandingPageLocalDefault() as any],
       context: ({
         req,
         res,
