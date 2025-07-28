@@ -85,15 +85,15 @@ export class User {
   email: string;
 
   @IsString()
-  @IsNotEmpty()
-  @Prop({ required: true, unique: true, trim: true, lowercase: true })
-  username: string;
+  @IsOptional()
+  @Prop({ unique: true, trim: true, lowercase: true })
+  username?: string;
 
   @IsPhoneNumber()
   @IsString()
-  @IsNotEmpty()
-  @Prop({ required: true, unique: true, trim: true })
-  phone: string;
+  @IsOptional()
+  @Prop({ unique: true, trim: true })
+  phone?: string;
 
   @HideField()
   @Prop({ required: true, minlength: 8, trim: true })
@@ -101,8 +101,9 @@ export class User {
 
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   @Prop({ type: String, enum: Gender })
-  gender: Gender;
+  gender?: Gender;
 
   @IsString()
   @IsNotEmpty()

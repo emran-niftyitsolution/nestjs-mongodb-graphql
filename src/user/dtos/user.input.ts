@@ -45,9 +45,6 @@ export class CreateUserInput extends PickType(User, [
   'firstName',
   'lastName',
   'email',
-  'username',
-  'phone',
-  'gender',
 ]) {
   @MaxLength(32)
   @MinLength(8)
