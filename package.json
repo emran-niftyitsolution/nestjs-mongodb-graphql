@@ -53,6 +53,7 @@
     "@compodoc/compodoc": "^1.1.26",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
+    "@faker-js/faker": "^9.9.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
@@ -81,20 +82,19 @@
     "webpack-node-externals": "^3.0.0"
   },
   "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/setup.ts"
     ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+    "moduleNameMapping": {
+      "^src/(.*)$": "<rootDir>/src/$1"
     },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testTimeout": 30000,
+    "verbose": true,
+    "forceExit": true,
+    "clearMocks": true,
+    "resetMocks": true,
+    "restoreMocks": true
   }
 }

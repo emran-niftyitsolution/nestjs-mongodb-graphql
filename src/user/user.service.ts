@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as argon2 from 'argon2';
-import { PaginateModel, Types } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   CreateUserInput,
   PaginatedUser,
@@ -9,6 +9,12 @@ import {
   UpdateUserInput,
 } from './dtos/user.input';
 import { User, UserDocument } from './schema/user.schema';
+
+// Define PaginateModel type locally
+type PaginateModel<T> = Model<T> & {
+  paginate: (query?: any, options?: any) => Promise<any>;
+};
+
 @Injectable()
 export class UserService {
   constructor(

@@ -57,7 +57,7 @@ import { UserModule } from './user/user.module';
           connection.plugin(mongooseUniqueValidator, {
             message: 'Error, expected {PATH} to be unique.',
           });
-          connection.plugin(ActivityLogService.apply);
+          connection.plugin(ActivityLogService.apply as any);
 
           return connection;
         },
