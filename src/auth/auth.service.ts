@@ -7,6 +7,7 @@ import {
   LoginInput,
   LoginResponse,
   RefreshTokenInput,
+  SignupInput,
 } from './dtos/auth.input';
 import { JwtPayload, Tokens } from './interfaces/jwt.interface';
 
@@ -56,6 +57,14 @@ export class AuthService {
         sub: user._id,
         email: user.email,
       }),
+      user,
+    };
+  }
+
+  async signup(input: SignupInput): Promise<LoginResponse> {
+    const user = await this.userService.create(input);
+    return {
+      ...this.getTokens({ sub: user._id, email: user.email }),
       user,
     };
   }

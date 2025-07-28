@@ -1,5 +1,12 @@
 import { InputType, ObjectType } from '@nestjs/graphql';
-import { IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsStrongPassword,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { User } from '../../user/schema/user.schema';
 
 @InputType()
@@ -8,6 +15,35 @@ export class LoginInput {
   @IsNotEmpty()
   username: string;
 
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+
+@InputType()
+export class SignupInput {
+  @IsString()
+  @IsNotEmpty()
+  firstName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  lastName: string;
+
+  @IsEmail()
+  @IsString()
+  @IsNotEmpty()
+  email: string;
+
+  @IsStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 1,
+  })
+  @MaxLength(32)
+  @MinLength(8)
   @IsString()
   @IsNotEmpty()
   password: string;

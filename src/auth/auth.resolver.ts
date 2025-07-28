@@ -5,6 +5,7 @@ import {
   LoginInput,
   LoginResponse,
   RefreshTokenInput,
+  SignupInput,
 } from './dtos/auth.input';
 
 @Public()
@@ -13,12 +14,17 @@ export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
   @Mutation(() => LoginResponse, { description: 'Login and get JWT token' })
-  async login(@Args('input') input: LoginInput): Promise<LoginResponse> {
+  login(@Args('input') input: LoginInput): Promise<LoginResponse> {
     return this.authService.login(input);
   }
 
+  @Mutation(() => LoginResponse, { description: 'Signup and get JWT token' })
+  signup(@Args('input') input: SignupInput): Promise<LoginResponse> {
+    return this.authService.signup(input);
+  }
+
   @Mutation(() => LoginResponse, { description: 'Refresh JWT tokens' })
-  async refreshToken(
+  refreshToken(
     @Args('input') input: RefreshTokenInput,
   ): Promise<LoginResponse> {
     return this.authService.refreshToken(input);
