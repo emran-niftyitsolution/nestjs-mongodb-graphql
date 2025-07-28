@@ -44,6 +44,7 @@ describe('UserResolver', () => {
     hasPrevPage: false,
     nextPage: null,
     prevPage: null,
+    pagingCounter: 1,
   };
 
   beforeEach(async () => {
