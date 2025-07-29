@@ -86,13 +86,13 @@ export class User {
 
   @IsString()
   @IsOptional()
-  @Prop({ unique: true, trim: true, lowercase: true })
+  @Prop({ unique: true, sparse: true, trim: true, lowercase: true })
   username?: string;
 
   @IsPhoneNumber()
   @IsString()
   @IsOptional()
-  @Prop({ unique: true, trim: true })
+  @Prop({ unique: true, sparse: true, trim: true })
   phone?: string;
 
   @HideField()
