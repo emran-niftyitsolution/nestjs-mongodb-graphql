@@ -46,7 +46,7 @@ export class AuthService {
   }
 
   async login(input: LoginInput): Promise<LoginResponse> {
-    const user = await this.userService.getUser({ username: input.username });
+    const user = await this.userService.getUser({ email: input.email });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const valid = await argon2.verify(user.password, input.password);

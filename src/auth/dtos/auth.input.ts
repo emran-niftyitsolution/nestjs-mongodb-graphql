@@ -11,9 +11,10 @@ import { User } from '../../user/schema/user.schema';
 
 @InputType()
 export class LoginInput {
+  @IsEmail()
   @IsString()
   @IsNotEmpty()
-  username: string;
+  email: string;
 
   @IsString()
   @IsNotEmpty()
