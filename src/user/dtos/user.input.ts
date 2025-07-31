@@ -66,14 +66,13 @@ export class CreateUserInput extends OmitType(User, [
 
 @InputType()
 export class UpdateUserInput extends PartialType(
-  PickType(User, [
-    'firstName',
-    'lastName',
+  OmitType(User, [
+    '_id',
     'email',
-    'username',
-    'phone',
-    'gender',
-    'status',
+    'lastActiveAt',
+    'createdAt',
+    'updatedAt',
+    'createdBy',
   ]),
 ) {
   @IsMongoId()
