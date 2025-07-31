@@ -120,12 +120,12 @@ export class User {
   @Prop()
   lastActiveAt?: Date;
 
-  @IsNotEmpty()
+  @IsOptional()
   @Prop({ type: String, enum: UserStatus, default: UserStatus.PENDING })
-  status: UserStatus;
+  status?: UserStatus;
 
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -3,6 +3,7 @@ import {
   ID,
   InputType,
   ObjectType,
+  OmitType,
   PartialType,
   PickType,
 } from '@nestjs/graphql';
@@ -41,10 +42,13 @@ export class PaginateUserInput extends PartialType(
 }
 
 @InputType()
-export class CreateUserInput extends PickType(User, [
-  'firstName',
-  'lastName',
-  'email',
+export class CreateUserInput extends OmitType(User, [
+  '_id',
+  'createdAt',
+  'updatedAt',
+  'createdBy',
+  'lastActiveAt',
+  'password',
 ]) {
   @MaxLength(32)
   @MinLength(8)
