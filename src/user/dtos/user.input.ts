@@ -19,7 +19,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Types } from 'mongoose';
-import { PaginatedType } from 'src/common/objecttypes/pagination';
+import { PaginatedType } from '../../common/objecttypes/pagination';
 import { User } from '../schema/user.schema';
 
 @InputType()
