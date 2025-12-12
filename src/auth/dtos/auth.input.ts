@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { InputType, ObjectType } from '@nestjs/graphql';
 import {
   IsEmail,
   IsNotEmpty,
@@ -11,13 +11,11 @@ import { User } from '../../user/schema/user.schema';
 
 @InputType()
 export class LoginInput {
-  @Field()
   @IsEmail()
   @IsString()
   @IsNotEmpty()
   email: string;
 
-  @Field()
   @IsString()
   @IsNotEmpty()
   password: string;
@@ -25,23 +23,19 @@ export class LoginInput {
 
 @InputType()
 export class SignupInput {
-  @Field()
   @IsString()
   @IsNotEmpty()
   firstName: string;
 
-  @Field()
   @IsString()
   @IsNotEmpty()
   lastName: string;
 
-  @Field()
   @IsEmail()
   @IsString()
   @IsNotEmpty()
   email: string;
 
-  @Field()
   @IsStrongPassword({
     minLength: 8,
     minLowercase: 1,
@@ -58,19 +52,13 @@ export class SignupInput {
 
 @ObjectType()
 export class LoginResponse {
-  @Field()
   accessToken: string;
-
-  @Field()
   refreshToken: string;
-
-  @Field(() => User)
   user: User;
 }
 
 @InputType()
 export class RefreshTokenInput {
-  @Field()
   @IsString()
   @IsNotEmpty()
   refreshToken: string;
