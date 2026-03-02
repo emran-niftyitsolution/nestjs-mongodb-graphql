@@ -5,6 +5,10 @@ import { AuthGuard } from '@nestjs/passport';
 import { OPTIONAL_AUTH_KEY } from '../decorators/optional-auth.decorator';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
+interface RequestWithHeaders {
+  headers?: { authorization?: string | string[] };
+}
+
 @Injectable()
 export class GqlAuthGuard extends AuthGuard('jwt') {
   constructor(private reflector: Reflector) {
@@ -24,11 +28,11 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
 
     if (optionalAuth) {
       const req = this.getRequest(context);
-      const header: string = (req?.headers?.['authorization'] as string) ?? '';
+      const raw = req.headers?.authorization;
+      const header =
+        typeof raw === 'string' ? raw : Array.isArray(raw) ? raw[0] : '';
       const hasToken =
-        typeof header === 'string' &&
-        header.startsWith('Bearer ') &&
-        header.split(' ')[1]?.length > 0;
+        header.startsWith('Bearer ') && header.split(' ')[1]?.length > 0;
 
       if (hasToken) {
         return super.canActivate(context);
@@ -44,13 +48,13 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  getRequest(context: ExecutionContext) {
+  getRequest(context: ExecutionContext): RequestWithHeaders {
     try {
       const ctx = GqlExecutionContext.create(context);
-      const gqlContext = ctx.getContext<{ req: unknown }>();
+      const gqlContext = ctx.getContext<{ req: RequestWithHeaders }>();
       return gqlContext.req;
     } catch {
-      return context.switchToHttp().getRequest();
+      return context.switchToHttp().getRequest<RequestWithHeaders>();
     }
   }
 }
