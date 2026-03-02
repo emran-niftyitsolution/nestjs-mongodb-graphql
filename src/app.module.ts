@@ -6,7 +6,7 @@ import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { Request, Response } from 'express';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { GraphQLError } from 'graphql';
 import { Connection } from 'mongoose';
 import mongoosePaginateV2 from 'mongoose-paginate-v2';
@@ -73,9 +73,9 @@ import { UserModule } from './user/user.module';
         req,
         res,
       }: {
-        req: Request;
-        res: Response;
-      }): { req: Request; res: Response } => ({ req, res }),
+        req: FastifyRequest;
+        res: FastifyReply;
+      }): { req: FastifyRequest; res: FastifyReply } => ({ req, res }),
       formatError: (error: GraphQLError) => {
         const { extensions, message, path } = error;
         const formattedError = {

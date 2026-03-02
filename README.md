@@ -23,38 +23,38 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+NestJS + **Fastify** + MongoDB + GraphQL API (TypeScript). Uses **Bun** as the runtime and package manager.
 
 ## Project setup
 
 ```bash
-$ npm install
+$ bun install
 ```
 
 ## Compile and run the project
 
 ```bash
 # development
-$ npm run start
+$ bun run start
 
 # watch mode
-$ npm run start:dev
+$ bun run start:dev
 
-# production mode
-$ npm run start:prod
+# production (build first: bun run build)
+$ bun run start:prod
 ```
 
 ## Run tests
 
 ```bash
 # unit tests
-$ npm run test
+$ bun test
 
 # e2e tests
-$ npm run test:e2e
+$ bun run test:e2e
 
 # test coverage
-$ npm run test:cov
+$ bun run test:cov
 ```
 
 ## Deployment

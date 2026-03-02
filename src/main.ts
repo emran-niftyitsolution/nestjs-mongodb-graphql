@@ -1,7 +1,11 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import compression from 'compression';
-import helmet from 'helmet';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import compression from '@fastify/compress';
+import helmet from '@fastify/helmet';
 import { AppModule } from './app.module';
 
 declare const module: {
@@ -12,7 +16,11 @@ declare const module: {
 };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+    { cors: { methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] } },
+  );
   const logger = new Logger('Bootstrap', { timestamp: true });
 
   app.useGlobalPipes(
@@ -25,35 +33,33 @@ async function bootstrap() {
       },
     }),
   );
-  app.enableCors();
-  app.use(compression());
 
-  app.use(
-    helmet({
-      crossOriginEmbedderPolicy: false,
-      contentSecurityPolicy: {
-        directives: {
-          imgSrc: [
-            `'self'`,
-            'data:',
-            'apollo-server-landing-page.cdn.apollographql.com',
-          ],
-          scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
-          manifestSrc: [
-            `'self'`,
-            'apollo-server-landing-page.cdn.apollographql.com',
-          ],
-          frameSrc: [`'self'`, 'sandbox.embed.apollographql.com'],
-        },
+  await app.register(compression);
+  await app.register(helmet, {
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        imgSrc: [
+          `'self'`,
+          'data:',
+          'apollo-server-landing-page.cdn.apollographql.com',
+        ],
+        scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
+        manifestSrc: [
+          `'self'`,
+          'apollo-server-landing-page.cdn.apollographql.com',
+        ],
+        frameSrc: [`'self'`, 'sandbox.embed.apollographql.com'],
       },
-    }),
-  );
+    },
+  });
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port, '0.0.0.0');
   logger.log(
     '-------------------------------------------',
-    `Server is running on port ${process.env.PORT ?? 3000}`,
-    `GraphQL playground: http://localhost:${process.env.PORT ?? 3000}/graphql`,
+    `Server is running on port ${port}`,
+    `GraphQL playground: http://localhost:${port}/graphql`,
     '-------------------------------------------',
   );
 
