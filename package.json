@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prepare": "husky",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "predev": "rimraf dist",
@@ -78,7 +79,15 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0",
     "webpack": "^5.100.2",
-    "webpack-node-externals": "^3.0.0"
+    "webpack-node-externals": "^3.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "jest": {
     "moduleFileExtensions": [
