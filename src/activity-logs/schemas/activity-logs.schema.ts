@@ -13,7 +13,7 @@ export class ActivityLog {
   @Field({ description: 'The action performed' })
   action: string;
 
-  @Prop({ type: SchemaTypes.ObjectId })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User' })
   @Field(() => ID, {
     nullable: true,
     description: 'The user who performed the action',
