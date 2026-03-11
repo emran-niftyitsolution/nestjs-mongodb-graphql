@@ -1,6 +1,7 @@
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Logger, Module } from '@nestjs/common';
+import GraphQLJSON from 'graphql-type-json';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -68,6 +69,7 @@ import { UserModule } from './user/user.module';
       playground: false,
       autoSchemaFile: true,
       sortSchema: true,
+      resolvers: { JSON: GraphQLJSON },
       plugins: [ApolloServerPluginLandingPageLocalDefault() as any],
       context: ({
         req,

@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import GraphQLJSON from 'graphql-type-json';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
 @ObjectType()
@@ -28,14 +29,14 @@ export class ActivityLog {
   documentId: Types.ObjectId;
 
   @Prop({ required: true, type: SchemaTypes.Mixed })
-  @Field(() => Object, { description: 'The payload of the request' })
-  payload: object;
+  @Field(() => GraphQLJSON, { description: 'The payload of the request' })
+  payload: Record<string, unknown>;
 
   @Prop({ required: true, type: SchemaTypes.Mixed })
-  @Field(() => Object, {
+  @Field(() => GraphQLJSON, {
     description: 'The difference of the previous and updated document',
   })
-  changes: object;
+  changes: Record<string, unknown>;
 }
 
 export type ActivityLogDocument = HydratedDocument<ActivityLog>;
