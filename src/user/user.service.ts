@@ -182,18 +182,6 @@ export class UserService {
   }
 
   async softDeleteUser(id: number): Promise<User | null> {
-    const userId = this.toUserIdNumber(id);
-
-    if (userId === null) {
-      return null;
-    }
-
-    const [updated] = await this.db
-      .update(users)
-      .set({ status: 'DELETED', updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-
-    return updated ? this.mapDbUserToGraphqlUser(updated) : null;
+    return this.updateUser(id, { status: UserStatus.DELETED });
   }
 }
