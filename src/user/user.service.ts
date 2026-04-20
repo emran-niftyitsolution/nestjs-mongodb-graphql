@@ -1,12 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { and, eq, ilike, or, sql, SQL } from 'drizzle-orm';
+import {
+  buildPaginatedResult,
+  PaginatedResult,
+} from '../common/objecttypes/pagination';
 import { DRIZZLE } from '../database/drizzle.module';
 import { users } from '../database/schema';
 import { DrizzleDB } from '../database/types/drizzle';
 import {
   CreateUserInput,
-  PaginatedUser,
   PaginateUserInput,
   UpdateUserInput,
 } from './dtos/user.input';
@@ -114,11 +117,10 @@ export class UserService {
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
     const user = await this.db.query.users.findFirst({ where });
-
     return user ? this.mapDbUserToGraphqlUser(user) : null;
   }
 
-  async getUsers(input: PaginateUserInput): Promise<PaginatedUser> {
+  async getUsers(input: PaginateUserInput): Promise<PaginatedResult<User>> {
     const { page, limit, search, ...rest } = input;
     const safePage = page || 1;
     const safeLimit = limit || 10;
@@ -143,21 +145,14 @@ export class UserService {
       .where(where);
 
     const totalDocs = Number(count || 0);
-    const totalPages = Math.max(1, Math.ceil(totalDocs / safeLimit));
 
-    return {
+    return buildPaginatedResult({
       docs: docs.map((doc) => this.mapDbUserToGraphqlUser(doc)),
       totalDocs,
-      limit: safeLimit,
-      hasPrevPage: safePage > 1,
-      hasNextPage: safePage < totalPages,
       page: safePage,
-      totalPages,
+      limit: safeLimit,
       offset,
-      prevPage: safePage > 1 ? safePage - 1 : null,
-      nextPage: safePage < totalPages ? safePage + 1 : null,
-      pagingCounter: totalDocs === 0 ? 0 : offset + 1,
-    };
+    });
   }
 
   async updateUser(

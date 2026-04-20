@@ -13,6 +13,10 @@ import {
   SQL,
 } from 'drizzle-orm';
 import { RequestContext } from 'nestjs-request-context';
+import {
+  buildPaginatedResult,
+  PaginatedResult,
+} from '../common/objecttypes/pagination';
 import { DRIZZLE } from '../database/drizzle.module';
 import { activityLogs, users } from '../database/schema';
 import { DrizzleDB } from '../database/types/drizzle';
@@ -139,18 +143,7 @@ export class ActivityLogService {
 
   async paginateActivityLogs(
     filter: ActivityLogPaginateFilterInput = {},
-  ): Promise<{
-    docs: ActivityLog[];
-    totalDocs: number;
-    limit: number;
-    hasPrevPage: boolean;
-    hasNextPage: boolean;
-    page?: number;
-    totalPages: number;
-    prevPage?: number | null;
-    nextPage?: number | null;
-    pagingCounter: number;
-  }> {
+  ): Promise<PaginatedResult<ActivityLog>> {
     try {
       const conditions: SQL[] = [];
 
@@ -233,9 +226,8 @@ export class ActivityLogService {
         .where(where);
 
       const totalDocs = Number(count || 0);
-      const totalPages = Math.max(1, Math.ceil(totalDocs / limit));
 
-      return {
+      return buildPaginatedResult({
         docs: docs.map((doc) => ({
           id: doc.id,
           collectionName: doc.collectionName,
@@ -248,15 +240,10 @@ export class ActivityLogService {
           updatedAt: doc.updatedAt,
         })),
         totalDocs,
-        limit,
-        hasPrevPage: page > 1,
-        hasNextPage: page < totalPages,
         page,
-        totalPages,
-        prevPage: page > 1 ? page - 1 : null,
-        nextPage: page < totalPages ? page + 1 : null,
-        pagingCounter: totalDocs === 0 ? 0 : offset + 1,
-      };
+        limit,
+        offset,
+      });
     } catch (error) {
       this.logger.error('Error paginating activity logs', error);
       throw error;

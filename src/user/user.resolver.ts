@@ -21,7 +21,7 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  async getUser(@Args('input') input: GetUserInput): Promise<User | null> {
+  async getUser(@Args('input') input: GetUserInput): Promise<User> {
     const user = await this.userService.getUser(input);
     if (!user) {
       throw new NotFoundException('User not found');
