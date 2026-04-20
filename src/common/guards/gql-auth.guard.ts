@@ -9,6 +9,11 @@ interface RequestWithHeaders {
   headers?: { authorization?: string | string[] };
 }
 
+interface GraphQLAuthContext {
+  req?: RequestWithHeaders;
+  request?: RequestWithHeaders;
+}
+
 @Injectable()
 export class GqlAuthGuard extends AuthGuard('jwt') {
   constructor(private reflector: Reflector) {
@@ -51,8 +56,12 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
   getRequest(context: ExecutionContext): RequestWithHeaders {
     try {
       const ctx = GqlExecutionContext.create(context);
-      const gqlContext = ctx.getContext<{ req: RequestWithHeaders }>();
-      return gqlContext.req;
+      const gqlContext = ctx.getContext<GraphQLAuthContext>();
+      return (
+        gqlContext.req ??
+        gqlContext.request ??
+        context.switchToHttp().getRequest<RequestWithHeaders>()
+      );
     } catch {
       return context.switchToHttp().getRequest<RequestWithHeaders>();
     }

@@ -30,6 +30,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<User | null> {
+    if (!Number.isInteger(payload.sub) || payload.sub <= 0) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
     const user = await this.userService.getUser({
       _id: payload.sub,
     });

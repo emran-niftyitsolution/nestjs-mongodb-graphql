@@ -1,77 +1,49 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
-import { InjectModel } from '@nestjs/mongoose';
-import { detailedDiff, DetailedDiff } from 'deep-object-diff';
-import { Document, Model, PaginateModel, Schema, Types } from 'mongoose';
-import { RequestContext } from 'nestjs-request-context';
-import { ActivityLogPaginateFilterInput } from './dto/activity-log.input';
-import { LogActionType } from './dto/activity-log.input';
 import {
-  ActivityLog,
-  ActivityLogDocument,
-} from './schemas/activity-logs.schema';
-import { User, UserDocument } from '../user/schema/user.schema';
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+  or,
+  sql,
+  SQL,
+} from 'drizzle-orm';
+import { RequestContext } from 'nestjs-request-context';
+import { DRIZZLE } from '../database/drizzle.module';
+import { activityLogs, users } from '../database/schema';
+import { DrizzleDB } from '../database/types/drizzle';
+import {
+  ActivityLogPaginateFilterInput,
+  LogActionType,
+} from './dto/activity-log.input';
+import { ActivityLog } from './schemas/activity-logs.schema';
 
 export { LogActionType };
 
 interface IRequestContext {
   body?: Record<string, unknown>;
-  user?: { _id?: string };
+  user?: { _id?: number };
 }
 
 interface ILogPayload {
   collectionName: string;
   action: LogActionType;
-  user: string | null;
+  user: number | null;
   documentId: string | null;
-  payload: Record<string, unknown> | null;
-  changes: Record<string, unknown> | null;
-}
-
-interface IChanges {
-  before: Record<string, unknown>;
-  after: Record<string, unknown>;
+  payload: Record<string, unknown>;
+  changes: Record<string, unknown>;
 }
 
 @Injectable()
 export class ActivityLogService {
   private readonly logger = new Logger(ActivityLogService.name);
-  private readonly dataCache = new Map<string, Record<string, unknown>>();
   private readonly EXCLUDED_COLLECTIONS = new Set(['activitylogs']);
-  private static instance: ActivityLogService;
 
-  constructor(
-    @InjectModel(ActivityLog.name)
-    private readonly activityLogModel: Model<ActivityLogDocument> &
-      PaginateModel<ActivityLogDocument>,
-    @InjectModel(User.name)
-    private readonly userModel: Model<UserDocument>,
-    @Inject(ModuleRef) private readonly moduleRef: ModuleRef,
-  ) {
-    ActivityLogService.instance = this;
-  }
-
-  static getInstance(): ActivityLogService {
-    if (!ActivityLogService.instance) {
-      throw new Error('ActivityLogService not initialized');
-    }
-    return ActivityLogService.instance;
-  }
-
-  private static logHookError(context: string, error: unknown): void {
-    try {
-      ActivityLogService.instance?.logger?.error(context, error);
-    } catch {
-      console.error(context, error);
-    }
-  }
-
-  private getChanges(
-    before: Record<string, unknown>,
-    after: Record<string, unknown>,
-  ): DetailedDiff {
-    return detailedDiff(before, after);
-  }
+  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
   private getRequestContext(): IRequestContext {
     try {
@@ -86,7 +58,6 @@ export class ActivityLogService {
   ): Record<string, unknown> {
     const sanitized = { ...payload };
 
-    // Handle GraphQL variables
     if (
       sanitized.variables &&
       typeof sanitized.variables === 'object' &&
@@ -94,12 +65,10 @@ export class ActivityLogService {
     ) {
       const variables = sanitized.variables as Record<string, unknown>;
 
-      // Skip logging for refresh token operations
       if (variables.refreshTokenInput) {
         return {};
       }
 
-      // Sanitize sensitive fields
       for (const value of Object.values(variables)) {
         if (value && typeof value === 'object' && value !== null) {
           const objValue = value as Record<string, unknown>;
@@ -115,54 +84,11 @@ export class ActivityLogService {
     return sanitized;
   }
 
-  private extractCollectionName(doc: unknown): string {
-    if (!doc || typeof doc !== 'object' || doc === null) return '';
+  private parseUserId(id?: number): number | null {
+    if (id === undefined || id === null) return null;
 
-    const docObj = doc as Record<string, unknown>;
-
-    // Try collection.name first
-    if (
-      docObj.collection &&
-      typeof docObj.collection === 'object' &&
-      docObj.collection !== null
-    ) {
-      const collection = docObj.collection as { name?: string };
-      return collection.name ?? '';
-    }
-
-    // Try collectionName property
-    if (typeof docObj.collectionName === 'string') {
-      return docObj.collectionName;
-    }
-
-    return '';
-  }
-
-  private extractDocumentId(doc: unknown): string {
-    if (!doc || typeof doc !== 'object' || doc === null) return '';
-    const docObj = doc as Record<string, unknown>;
-    const id = docObj._id;
-    if (typeof id === 'string') return id;
-    // Handle MongoDB extended JSON
-    if (
-      id &&
-      typeof id === 'object' &&
-      id !== null &&
-      Object.prototype.hasOwnProperty.call(id, '$oid') &&
-      typeof (id as { $oid?: unknown }).$oid === 'string'
-    ) {
-      return (id as { $oid: string }).$oid;
-    }
-    // Handle Mongoose ObjectId (has a toString method)
-    if (
-      id &&
-      typeof id === 'object' &&
-      typeof (id as { toString: () => string }).toString === 'function'
-    ) {
-      const str = (id as { toString: () => string }).toString();
-      if (str && str !== '[object Object]') return str;
-    }
-    return '';
+    const parsed = Number(id);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
   }
 
   async createLog(
@@ -171,7 +97,6 @@ export class ActivityLogService {
     documentId: string,
     diffObject: unknown,
   ): Promise<void> {
-    // Skip excluded collections
     if (this.EXCLUDED_COLLECTIONS.has(modelName.toLowerCase())) {
       return;
     }
@@ -180,8 +105,6 @@ export class ActivityLogService {
     const body = req?.body ?? {};
     const user = req?.user;
 
-    const sanitizedPayload = this.sanitizePayload(body);
-    // Skip only when it was refresh token (sanitizePayload returns {} and we bail for that case)
     if (
       body?.variables &&
       typeof body.variables === 'object' &&
@@ -190,176 +113,34 @@ export class ActivityLogService {
       return;
     }
 
+    const sanitizedPayload = this.sanitizePayload(body);
     const payload: ILogPayload = {
       collectionName: modelName,
       action,
-      user: user?._id ?? null,
+      user: this.parseUserId(user?._id),
       documentId: documentId || null,
       payload: Object.keys(sanitizedPayload).length > 0 ? sanitizedPayload : {},
       changes: (diffObject as Record<string, unknown>) ?? {},
     };
 
-    if (modelName && this.activityLogModel) {
-      try {
-        await this.activityLogModel.create(payload);
-      } catch (error) {
-        this.logger.error('Failed to create activity log', error);
-      }
-    }
-  }
-
-  private generateCacheKey(query: Record<string, unknown>): string {
-    return JSON.stringify(query);
-  }
-
-  async preSchema(
-    query: Record<string, unknown>,
-    updatedObject: Record<string, unknown>,
-    model: Model<any>,
-  ): Promise<void> {
     try {
-      const keys = Object.keys(updatedObject ?? {}).filter(
-        (key) => !key.startsWith('$'),
-      );
-
-      if (!keys.includes('updatedAt')) {
-        keys.push('updatedAt');
-      }
-
-      if (model?.findOne) {
-        const found = await model.findOne(query).select(keys).lean().exec();
-        const cacheKey = this.generateCacheKey(query);
-
-        if (found && typeof found === 'object' && !Array.isArray(found)) {
-          this.dataCache.set(cacheKey, found as Record<string, unknown>);
-        } else {
-          this.dataCache.delete(cacheKey);
-        }
-      }
+      await this.db.insert(activityLogs).values({
+        collectionName: payload.collectionName,
+        action: payload.action,
+        userId: payload.user,
+        documentId: payload.documentId,
+        payload: payload.payload,
+        changes: payload.changes,
+      });
     } catch (error) {
-      this.logger.error('Error in preSchema', error);
+      this.logger.error('Failed to create activity log', error);
     }
-  }
-
-  async postSchema(
-    action: LogActionType,
-    updatedObject: unknown,
-    doc: unknown,
-    query?: Record<string, unknown>,
-  ): Promise<void> {
-    try {
-      if (!doc) {
-        return;
-      }
-
-      const collectionName = this.extractCollectionName(doc);
-      const docId = this.extractDocumentId(doc);
-
-      let changes: IChanges = { before: {}, after: {} };
-
-      switch (action) {
-        case LogActionType.CREATE: {
-          const docObj = JSON.parse(JSON.stringify(doc)) as Record<
-            string,
-            unknown
-          >;
-          changes = { before: {}, after: docObj };
-          break;
-        }
-        case LogActionType.UPDATE:
-          changes = this.handleUpdateChanges(updatedObject, query);
-          break;
-        case LogActionType.DELETE: {
-          const deletedObj = JSON.parse(JSON.stringify(doc)) as Record<
-            string,
-            unknown
-          >;
-          changes = { before: deletedObj, after: {} };
-          break;
-        }
-      }
-
-      if (this.hasChanges(changes)) {
-        await this.createLog(action, collectionName, docId, changes);
-      }
-
-      // Clean up cache
-      if (query) {
-        const cacheKey = this.generateCacheKey(query);
-        this.dataCache.delete(cacheKey);
-      }
-    } catch (error) {
-      this.logger.error('Error in postSchema', error);
-    }
-  }
-
-  private handleUpdateChanges(
-    updatedObject: unknown,
-    query?: Record<string, unknown>,
-  ): IChanges {
-    let safeSet: Record<string, unknown> = {};
-
-    if (
-      updatedObject &&
-      typeof updatedObject === 'object' &&
-      updatedObject !== null
-    ) {
-      const updateObj = updatedObject as Record<string, unknown>;
-      if (
-        updateObj.$set &&
-        typeof updateObj.$set === 'object' &&
-        updateObj.$set !== null
-      ) {
-        safeSet = updateObj.$set as Record<string, unknown>;
-      }
-    }
-
-    const cacheKey = query ? this.generateCacheKey(query) : '';
-    const previousData = cacheKey ? this.dataCache.get(cacheKey) : undefined;
-
-    const before = previousData
-      ? (JSON.parse(JSON.stringify(previousData)) as Record<string, unknown>)
-      : {};
-    const after = safeSet
-      ? (JSON.parse(JSON.stringify(safeSet)) as Record<string, unknown>)
-      : {};
-
-    // Only include changed fields
-    const diff = this.getChanges(before, after);
-    const changedKeys = [
-      ...Object.keys(diff.added ?? {}),
-      ...Object.keys(diff.updated ?? {}),
-      ...Object.keys(diff.deleted ?? {}),
-    ];
-
-    const SENSITIVE_FIELDS = ['password'];
-    const beforeFiltered: Record<string, unknown> = {};
-    const afterFiltered: Record<string, unknown> = {};
-
-    for (const key of changedKeys) {
-      if (SENSITIVE_FIELDS.includes(key)) {
-        beforeFiltered[key] = key in before ? '*****' : undefined;
-        afterFiltered[key] = key in after ? '*****' : undefined;
-        continue;
-      }
-      beforeFiltered[key] = before[key];
-      afterFiltered[key] = after[key];
-    }
-
-    return { before: beforeFiltered, after: afterFiltered };
-  }
-
-  private hasChanges(changes: IChanges): boolean {
-    return (
-      Object.keys(changes.before).length > 0 ||
-      Object.keys(changes.after).length > 0
-    );
   }
 
   async paginateActivityLogs(
     filter: ActivityLogPaginateFilterInput = {},
   ): Promise<{
-    docs: ActivityLogDocument[];
+    docs: ActivityLog[];
     totalDocs: number;
     limit: number;
     hasPrevPage: boolean;
@@ -371,94 +152,111 @@ export class ActivityLogService {
     pagingCounter: number;
   }> {
     try {
-      const query: Record<string, unknown> = {};
+      const conditions: SQL[] = [];
 
       if (filter.target) {
-        query.collectionName = {
-          $regex: filter.target,
-          $options: 'i',
-        };
+        conditions.push(
+          ilike(activityLogs.collectionName, `%${filter.target}%`),
+        );
       }
 
       if (filter.action) {
-        query.action = filter.action;
+        conditions.push(eq(activityLogs.action, filter.action));
       }
 
       if (filter.search) {
         const searchText = String(filter.search).trim();
-        const searchConditions: Record<string, unknown>[] = [];
+        const searchConditions: SQL[] = [
+          eq(activityLogs.documentId, searchText),
+        ];
+        const searchUserId = Number(searchText);
 
-        if (Types.ObjectId.isValid(searchText)) {
-          searchConditions.push({
-            documentId: new Types.ObjectId(searchText),
-          });
+        if (Number.isInteger(searchUserId) && searchUserId > 0) {
+          searchConditions.push(eq(activityLogs.userId, searchUserId));
         }
 
-        const userSearchConditions: Record<string, unknown>[] = [];
-        if (Types.ObjectId.isValid(searchText)) {
-          userSearchConditions.push({ _id: new Types.ObjectId(searchText) });
-        }
-        userSearchConditions.push({
-          $or: [
-            { firstName: { $regex: searchText, $options: 'i' } },
-            { lastName: { $regex: searchText, $options: 'i' } },
-            { email: { $regex: searchText, $options: 'i' } },
-          ],
-        });
-
-        const matchingUsers = await this.userModel
-          .find({ $or: userSearchConditions })
-          .select('_id')
-          .lean()
-          .exec();
+        const matchingUsers = await this.db
+          .select({ id: users.id })
+          .from(users)
+          .where(
+            or(
+              ilike(users.firstName, `%${searchText}%`),
+              ilike(users.lastName, `%${searchText}%`),
+              ilike(users.email, `%${searchText}%`),
+            ),
+          );
 
         if (matchingUsers.length > 0) {
-          searchConditions.push({
-            user: { $in: matchingUsers.map((u) => u._id) },
-          });
-        }
-
-        if (searchConditions.length > 0) {
-          query.$or = searchConditions;
-        }
-      }
-
-      if (filter.startDate || filter.endDate) {
-        query.createdAt = {} as Record<string, unknown>;
-        if (filter.startDate) {
-          (query.createdAt as Record<string, unknown>).$gte = new Date(
-            filter.startDate,
+          searchConditions.push(
+            inArray(
+              activityLogs.userId,
+              matchingUsers.map((u) => u.id),
+            ),
           );
         }
-        if (filter.endDate) {
-          const endDate = new Date(filter.endDate);
-          endDate.setHours(23, 59, 59, 999);
-          (query.createdAt as Record<string, unknown>).$lte = endDate;
-        }
+
+        conditions.push(or(...searchConditions)!);
       }
 
-      const sort: Record<string, 1 | -1> = {};
-      if (filter.sortByCreatedAt != null) {
-        sort.createdAt = filter.sortByCreatedAt;
-      }
-      if (Object.keys(sort).length === 0) {
-        sort.createdAt = -1;
+      if (filter.startDate) {
+        conditions.push(
+          gte(activityLogs.createdAt, new Date(filter.startDate)),
+        );
       }
 
+      if (filter.endDate) {
+        const endDate = new Date(filter.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        conditions.push(lte(activityLogs.createdAt, endDate));
+      }
+
+      const where = conditions.length > 0 ? and(...conditions) : undefined;
       const page = filter.page ?? 1;
       const limit = filter.limit ?? 10;
+      const offset = (page - 1) * limit;
+      const sortDirection =
+        filter.sortByCreatedAt === 1
+          ? asc(activityLogs.createdAt)
+          : desc(activityLogs.createdAt);
 
-      const result = await this.activityLogModel.paginate(query, {
-        page,
+      const docs = await this.db
+        .select()
+        .from(activityLogs)
+        .where(where)
+        .orderBy(sortDirection)
+        .limit(limit)
+        .offset(offset);
+
+      const [{ count }] = await this.db
+        .select({ count: sql<number>`count(*)` })
+        .from(activityLogs)
+        .where(where);
+
+      const totalDocs = Number(count || 0);
+      const totalPages = Math.max(1, Math.ceil(totalDocs / limit));
+
+      return {
+        docs: docs.map((doc) => ({
+          id: doc.id,
+          collectionName: doc.collectionName,
+          action: doc.action,
+          user: doc.userId,
+          documentId: doc.documentId,
+          payload: doc.payload,
+          changes: doc.changes,
+          createdAt: doc.createdAt,
+          updatedAt: doc.updatedAt,
+        })),
+        totalDocs,
         limit,
-        sort,
-        populate: {
-          path: 'user',
-          select: 'firstName lastName email',
-        },
-      });
-
-      return result as typeof result & { docs: ActivityLogDocument[] };
+        hasPrevPage: page > 1,
+        hasNextPage: page < totalPages,
+        page,
+        totalPages,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: page < totalPages ? page + 1 : null,
+        pagingCounter: totalDocs === 0 ? 0 : offset + 1,
+      };
     } catch (error) {
       this.logger.error('Error paginating activity logs', error);
       throw error;
@@ -467,9 +265,12 @@ export class ActivityLogService {
 
   async getDistinctTargets(): Promise<string[]> {
     try {
-      const distinctTargets =
-        await this.activityLogModel.distinct('collectionName');
+      const distinctTargets = await this.db
+        .selectDistinct({ collectionName: activityLogs.collectionName })
+        .from(activityLogs);
+
       return distinctTargets
+        .map((target) => target.collectionName)
         .filter(
           (t): t is string => t != null && typeof t === 'string' && t !== '',
         )
@@ -478,261 +279,5 @@ export class ActivityLogService {
       this.logger.error('Error getting distinct targets', error);
       throw error;
     }
-  }
-
-  static apply(this: void, schema: Schema<Document>): void {
-    // Pre-save hook
-    schema.pre('save', function (next) {
-      try {
-        const changes = this.isNew ? {} : this.getChanges();
-        const cacheKey = this._id?.toString() ?? '';
-        if (cacheKey && !this.isNew) {
-          const service = ActivityLogService.getInstance();
-          service.dataCache.set(cacheKey, changes);
-        }
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError('Error in save pre-hook', error);
-        next();
-      }
-    });
-
-    // Pre-update hooks
-    schema.pre('updateOne', async function (next) {
-      try {
-        const query = this.getQuery();
-        const update = this.getUpdate();
-        const model = this.model;
-
-        const service = ActivityLogService.getInstance();
-        await service.preSchema(
-          query,
-          update &&
-            typeof update === 'object' &&
-            !Array.isArray(update) &&
-            update !== null
-            ? update
-            : {},
-          model,
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError('Error in updateOne pre-hook', error);
-        next();
-      }
-    });
-
-    schema.pre('findOneAndUpdate', async function (next) {
-      try {
-        const query = this.getQuery();
-        const update = this.getUpdate();
-        const model = this.model;
-
-        const service = ActivityLogService.getInstance();
-        await service.preSchema(
-          query,
-          update &&
-            typeof update === 'object' &&
-            !Array.isArray(update) &&
-            update !== null
-            ? update
-            : {},
-          model,
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError(
-          'Error in findOneAndUpdate pre-hook',
-          error,
-        );
-        next();
-      }
-    });
-
-    schema.pre('replaceOne', async function (next) {
-      try {
-        const query = this.getQuery();
-        const update = this.getUpdate();
-        const model = this.model;
-
-        const service = ActivityLogService.getInstance();
-        await service.preSchema(
-          query,
-          update &&
-            typeof update === 'object' &&
-            !Array.isArray(update) &&
-            update !== null
-            ? update
-            : {},
-          model,
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError('Error in replaceOne pre-hook', error);
-        next();
-      }
-    });
-
-    schema.pre('findOneAndReplace', async function (next) {
-      try {
-        const query = this.getQuery();
-        const update = this.getUpdate();
-        const model = this.model;
-
-        const service = ActivityLogService.getInstance();
-        await service.preSchema(
-          query,
-          update &&
-            typeof update === 'object' &&
-            !Array.isArray(update) &&
-            update !== null
-            ? update
-            : {},
-          model,
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError(
-          'Error in findOneAndReplace pre-hook',
-          error,
-        );
-        next();
-      }
-    });
-
-    // Post-save hook
-    schema.post('save', async function (doc: Document, next) {
-      try {
-        const cacheKey = doc._id?.toString() ?? '';
-
-        const service = ActivityLogService.getInstance();
-        const cachedChanges = service.dataCache.get(cacheKey);
-
-        await service.postSchema(
-          !cachedChanges || Object.keys(cachedChanges).length === 0
-            ? LogActionType.CREATE
-            : LogActionType.UPDATE,
-          cachedChanges ?? null,
-          doc,
-          undefined,
-        );
-
-        // Clean up cache
-        if (cacheKey) {
-          service.dataCache.delete(cacheKey);
-        }
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError('Error in save post-hook', error);
-        next();
-      }
-    });
-
-    // Post-update hooks
-    schema.post('updateOne', async function (doc: Document, next) {
-      try {
-        const service = ActivityLogService.getInstance();
-        await service.postSchema(
-          LogActionType.UPDATE,
-          this.getUpdate(),
-          doc,
-          this.getQuery(),
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError('Error in updateOne post-hook', error);
-        next();
-      }
-    });
-
-    schema.post('findOneAndUpdate', async function (doc: Document, next) {
-      try {
-        const service = ActivityLogService.getInstance();
-        await service.postSchema(
-          LogActionType.UPDATE,
-          this.getUpdate(),
-          doc,
-          this.getQuery(),
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError(
-          'Error in findOneAndUpdate post-hook',
-          error,
-        );
-        next();
-      }
-    });
-
-    schema.post('replaceOne', async function (doc: Document, next) {
-      try {
-        const service = ActivityLogService.getInstance();
-        await service.postSchema(
-          LogActionType.UPDATE,
-          this.getUpdate(),
-          doc,
-          this.getQuery(),
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError('Error in replaceOne post-hook', error);
-        next();
-      }
-    });
-
-    schema.post('findOneAndReplace', async function (doc: Document, next) {
-      try {
-        const service = ActivityLogService.getInstance();
-        await service.postSchema(
-          LogActionType.UPDATE,
-          this.getUpdate(),
-          doc,
-          this.getQuery(),
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError(
-          'Error in findOneAndReplace post-hook',
-          error,
-        );
-        next();
-      }
-    });
-
-    // Post-delete hooks
-    schema.post('deleteOne', async function (doc: Document, next) {
-      try {
-        const service = ActivityLogService.getInstance();
-        await service.postSchema(
-          LogActionType.DELETE,
-          null,
-          doc,
-          this.getQuery?.(),
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError('Error in deleteOne post-hook', error);
-        next();
-      }
-    });
-
-    schema.post('findOneAndDelete', async function (doc: Document, next) {
-      try {
-        const service = ActivityLogService.getInstance();
-        await service.postSchema(
-          LogActionType.DELETE,
-          null,
-          doc,
-          this.getQuery?.(),
-        );
-        next();
-      } catch (error) {
-        ActivityLogService.logHookError(
-          'Error in findOneAndDelete post-hook',
-          error,
-        );
-        next();
-      }
-    });
   }
 }

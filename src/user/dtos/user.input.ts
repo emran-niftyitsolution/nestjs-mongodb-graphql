@@ -1,14 +1,14 @@
 import {
   Field,
-  ID,
   InputType,
+  Int,
   ObjectType,
   OmitType,
   PartialType,
   PickType,
 } from '@nestjs/graphql';
 import {
-  IsMongoId,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -18,7 +18,6 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { Types } from 'mongoose';
 import { PaginatedType } from '../../common/objecttypes/pagination';
 import { User } from '../schema/user.schema';
 
@@ -61,7 +60,7 @@ export class CreateUserInput extends OmitType(User, [
   })
   @IsString()
   @IsNotEmpty()
-  password: string;
+  password!: string;
 }
 
 @InputType()
@@ -75,10 +74,10 @@ export class UpdateUserInput extends PartialType(
     'createdBy',
   ]),
 ) {
-  @IsMongoId()
+  @IsInt()
   @IsNotEmpty()
-  @Field(() => ID)
-  _id: Types.ObjectId;
+  @Field(() => Int)
+  _id!: number;
 
   @MaxLength(32)
   @MinLength(8)

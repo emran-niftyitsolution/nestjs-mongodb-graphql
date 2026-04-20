@@ -3,13 +3,13 @@ import {
   HideField,
   ID,
   InputType,
+  Int,
   ObjectType,
   registerEnumType,
 } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   IsEmail,
-  IsMongoId,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
@@ -17,9 +17,6 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
-
-export type UserDocument = HydratedDocument<User>;
 
 export enum Gender {
   MALE = 'MALE',
@@ -54,78 +51,61 @@ registerEnumType(UserRole, {
 
 @InputType('UserInput')
 @ObjectType()
-@Schema({
-  timestamps: true,
-})
 export class User {
-  @IsMongoId()
-  @IsString()
+  @IsInt()
   @IsNotEmpty()
-  @Field(() => ID)
-  _id: Types.ObjectId;
+  @Field(() => Int)
+  _id!: number;
 
   @MaxLength(20)
   @MinLength(2)
   @IsString()
   @IsNotEmpty()
-  @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
-  firstName: string;
+  firstName!: string;
 
   @MaxLength(20)
   @MinLength(2)
   @IsString()
   @IsNotEmpty()
-  @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
-  lastName: string;
+  lastName!: string;
 
   @IsEmail()
   @IsString()
   @IsNotEmpty()
-  @Prop({ required: true, unique: true, trim: true, lowercase: true })
-  email: string;
+  email!: string;
 
   @IsString()
   @IsOptional()
-  @Prop({ unique: true, sparse: true, trim: true, lowercase: true })
   username?: string;
 
   @IsPhoneNumber()
   @IsString()
   @IsOptional()
-  @Prop({ unique: true, sparse: true, trim: true })
   phone?: string;
 
   @HideField()
-  @Prop({ required: true, minlength: 8, trim: true })
-  password: string;
+  password!: string;
 
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  @Prop({ type: String, enum: Gender })
   gender?: Gender;
 
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  @Prop({ type: String, enum: UserRole, default: UserRole.USER })
   role?: UserRole;
 
   @IsOptional()
   @Field(() => ID)
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'User' })
-  createdBy?: Types.ObjectId;
+  createdBy?: string;
 
   @IsOptional()
-  @Prop()
   lastActiveAt?: Date;
 
   @IsOptional()
-  @Prop({ type: String, enum: UserStatus, default: UserStatus.PENDING })
   status?: UserStatus;
 
   createdAt?: Date;
   updatedAt?: Date;
 }
-
-export const UserSchema = SchemaFactory.createForClass(User);

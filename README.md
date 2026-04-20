@@ -23,7 +23,11 @@
 
 ## Description
 
-NestJS + **Fastify** + MongoDB + GraphQL API (TypeScript). Uses **Bun** as the runtime and package manager.
+NestJS + **Fastify** + GraphQL API (TypeScript). Uses **Bun** as the runtime and package manager.
+
+Current data setup:
+
+- PostgreSQL + Drizzle ORM is the active data layer for the application.
 
 ## Project setup
 
@@ -56,6 +60,23 @@ $ bun run test:e2e
 # test coverage
 $ bun run test:cov
 ```
+
+## Drizzle + PostgreSQL
+
+```bash
+# generate migration files from Drizzle schema
+$ bun run db:generate
+
+# apply generated migrations
+$ bun run db:migrate
+
+# open Drizzle Studio
+$ bun run db:studio
+```
+
+Environment variables:
+
+- `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/testdb`
 
 ## Deployment
 

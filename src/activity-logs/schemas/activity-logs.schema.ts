@@ -1,43 +1,40 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
 @ObjectType()
-@Schema({ timestamps: true })
 export class ActivityLog {
-  @Prop({ required: true })
+  @Field(() => Int)
+  id!: number;
+
   @Field({ description: 'The collection name' })
-  collectionName: string;
+  collectionName!: string;
 
-  @Prop({ required: true })
   @Field({ description: 'The action performed' })
-  action: string;
+  action!: string;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'User' })
-  @Field(() => ID, {
+  @Field(() => Int, {
     nullable: true,
     description: 'The user who performed the action',
   })
-  user: Types.ObjectId;
+  user?: number | null;
 
-  @Prop({ type: SchemaTypes.ObjectId })
   @Field(() => ID, {
     nullable: true,
     description: 'The original document id',
   })
-  documentId: Types.ObjectId;
+  documentId?: string | null;
 
-  @Prop({ required: true, type: SchemaTypes.Mixed })
   @Field(() => GraphQLJSON, { description: 'The payload of the request' })
-  payload: Record<string, unknown>;
+  payload!: Record<string, unknown>;
 
-  @Prop({ required: true, type: SchemaTypes.Mixed })
   @Field(() => GraphQLJSON, {
     description: 'The difference of the previous and updated document',
   })
-  changes: Record<string, unknown>;
-}
+  changes!: Record<string, unknown>;
 
-export type ActivityLogDocument = HydratedDocument<ActivityLog>;
-export const ActivityLogSchema = SchemaFactory.createForClass(ActivityLog);
+  @Field({ nullable: true })
+  createdAt?: Date;
+
+  @Field({ nullable: true })
+  updatedAt?: Date;
+}

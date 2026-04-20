@@ -74,6 +74,9 @@ export class AuthService {
       const payload = this.jwtService.verify<JwtPayload>(input.refreshToken, {
         secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
       });
+      if (!Number.isInteger(payload.sub) || payload.sub <= 0) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
       const user = await this.userService.getUser({ _id: payload.sub });
       if (!user) throw new UnauthorizedException('Invalid refresh token');
       return {
