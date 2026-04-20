@@ -55,7 +55,7 @@ export class User {
   @IsInt()
   @IsNotEmpty()
   @Field(() => Int)
-  _id!: number;
+  id!: number;
 
   @MaxLength(20)
   @MinLength(2)

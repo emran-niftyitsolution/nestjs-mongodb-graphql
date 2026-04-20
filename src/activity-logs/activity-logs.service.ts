@@ -26,7 +26,7 @@ export { LogActionType };
 
 interface IRequestContext {
   body?: Record<string, unknown>;
-  user?: { _id?: number };
+  user?: { id?: number };
 }
 
 interface ILogPayload {
@@ -117,7 +117,7 @@ export class ActivityLogService {
     const payload: ILogPayload = {
       collectionName: modelName,
       action,
-      user: this.parseUserId(user?._id),
+      user: this.parseUserId(user?.id),
       documentId: documentId || null,
       payload: Object.keys(sanitizedPayload).length > 0 ? sanitizedPayload : {},
       changes: (diffObject as Record<string, unknown>) ?? {},

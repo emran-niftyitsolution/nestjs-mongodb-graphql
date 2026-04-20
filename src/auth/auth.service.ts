@@ -54,7 +54,7 @@ export class AuthService {
 
     return {
       ...this.getTokens({
-        sub: user._id,
+        sub: user.id,
         email: user.email,
       }),
       user,
@@ -64,7 +64,7 @@ export class AuthService {
   async signup(input: SignupInput): Promise<LoginResponse> {
     const user = await this.userService.create(input);
     return {
-      ...this.getTokens({ sub: user._id, email: user.email }),
+      ...this.getTokens({ sub: user.id, email: user.email }),
       user,
     };
   }
@@ -77,10 +77,10 @@ export class AuthService {
       if (!Number.isInteger(payload.sub) || payload.sub <= 0) {
         throw new UnauthorizedException('Invalid refresh token');
       }
-      const user = await this.userService.getUser({ _id: payload.sub });
+      const user = await this.userService.getUser({ id: payload.sub });
       if (!user) throw new UnauthorizedException('Invalid refresh token');
       return {
-        ...this.getTokens({ sub: user._id, email: user.email }),
+        ...this.getTokens({ sub: user.id, email: user.email }),
         user,
       };
     } catch {

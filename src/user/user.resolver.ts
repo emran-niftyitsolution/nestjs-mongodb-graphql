@@ -36,14 +36,14 @@ export class UserResolver {
 
   @Mutation(() => User)
   updateUser(@Args('input') input: UpdateUserInput): Promise<User | null> {
-    const { _id, ...update } = input;
-    return this.userService.updateUser(_id, update);
+    const { id, ...update } = input;
+    return this.userService.updateUser(id, update);
   }
 
   @Mutation(() => User)
   softDeleteUser(
     @Args('input') input: SoftDeleteUserInput,
   ): Promise<User | null> {
-    return this.userService.softDeleteUser(input._id);
+    return this.userService.softDeleteUser(input.id);
   }
 }

@@ -27,7 +27,7 @@ export class UserService {
 
   private mapDbUserToGraphqlUser(row: typeof users.$inferSelect): User {
     return {
-      _id: row.id,
+      id: row.id,
       firstName: row.firstName,
       lastName: row.lastName,
       email: row.email,
@@ -45,7 +45,7 @@ export class UserService {
   }
 
   private getFilterConditions(input: {
-    _id?: number;
+    id?: number;
     firstName?: string;
     lastName?: string;
     email?: string;
@@ -57,7 +57,7 @@ export class UserService {
     search?: string;
   }): SQL[] {
     const conditions: SQL[] = [];
-    const id = this.toUserIdNumber(input._id);
+    const id = this.toUserIdNumber(input.id);
 
     if (id !== null) conditions.push(eq(users.id, id));
     if (input.firstName) conditions.push(eq(users.firstName, input.firstName));
@@ -162,7 +162,7 @@ export class UserService {
 
   async updateUser(
     id: number,
-    input: Omit<UpdateUserInput, '_id'>,
+    input: Omit<UpdateUserInput, 'id'>,
   ): Promise<User | null> {
     const userId = this.toUserIdNumber(id);
 

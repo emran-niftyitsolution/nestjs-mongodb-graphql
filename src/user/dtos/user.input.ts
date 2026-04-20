@@ -22,7 +22,7 @@ import { PaginatedType } from '../../common/objecttypes/pagination';
 import { User } from '../schema/user.schema';
 
 @InputType()
-export class GetUserInput extends PickType(User, ['_id']) {}
+export class GetUserInput extends PickType(User, ['id']) {}
 
 @InputType()
 export class PaginateUserInput extends PartialType(
@@ -42,7 +42,7 @@ export class PaginateUserInput extends PartialType(
 
 @InputType()
 export class CreateUserInput extends OmitType(User, [
-  '_id',
+  'id',
   'createdAt',
   'updatedAt',
   'createdBy',
@@ -66,7 +66,7 @@ export class CreateUserInput extends OmitType(User, [
 @InputType()
 export class UpdateUserInput extends PartialType(
   OmitType(User, [
-    '_id',
+    'id',
     'email',
     'lastActiveAt',
     'createdAt',
@@ -77,7 +77,7 @@ export class UpdateUserInput extends PartialType(
   @IsInt()
   @IsNotEmpty()
   @Field(() => Int)
-  _id!: number;
+  id!: number;
 
   @MaxLength(32)
   @MinLength(8)
@@ -95,7 +95,7 @@ export class UpdateUserInput extends PartialType(
 }
 
 @InputType()
-export class SoftDeleteUserInput extends PickType(User, ['_id']) {}
+export class SoftDeleteUserInput extends PickType(User, ['id']) {}
 
 @ObjectType()
 export class PaginatedUser extends PaginatedType(User) {}
