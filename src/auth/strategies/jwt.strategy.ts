@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
+import { Types } from 'mongoose';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { User } from '../../user/schema/user.schema';
 import { UserService } from '../../user/user.service';
@@ -30,8 +31,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   override async validate(payload: JwtPayload): Promise<User> {
+    if (!Types.ObjectId.isValid(payload.sub)) {
+      throw new UnauthorizedException('Invalid token');
+    }
     const user = await this.userService.getUser({
-      _id: payload.sub,
+      _id: new Types.ObjectId(payload.sub),
     });
     if (!user) {
       throw new UnauthorizedException('Invalid token');

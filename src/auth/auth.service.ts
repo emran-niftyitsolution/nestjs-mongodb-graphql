@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { Types } from 'mongoose';
 import { UserService } from '../user/user.service';
 import type {
   LoginInput,
@@ -54,7 +55,7 @@ export class AuthService {
 
     return {
       ...this.getTokens({
-        sub: user._id,
+        sub: user._id.toString(),
         email: user.email,
       }),
       user,
@@ -64,7 +65,7 @@ export class AuthService {
   async signup(input: SignupInput): Promise<LoginResponse> {
     const user = await this.userService.create(input);
     return {
-      ...this.getTokens({ sub: user._id, email: user.email }),
+      ...this.getTokens({ sub: user._id.toString(), email: user.email }),
       user,
     };
   }
@@ -77,10 +78,15 @@ export class AuthService {
       const payload = this.jwtService.verify<JwtPayload>(input.refreshToken, {
         secret: refreshTokenSecret,
       });
-      const user = await this.userService.getUser({ _id: payload.sub });
+      if (!Types.ObjectId.isValid(payload.sub)) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      const user = await this.userService.getUser({
+        _id: new Types.ObjectId(payload.sub),
+      });
       if (!user) throw new UnauthorizedException('Invalid refresh token');
       return {
-        ...this.getTokens({ sub: user._id, email: user.email }),
+        ...this.getTokens({ sub: user._id.toString(), email: user.email }),
         user,
       };
     } catch {
