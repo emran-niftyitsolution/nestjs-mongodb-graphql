@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as argon2 from 'argon2';
 import type { PaginateModel, Types } from 'mongoose';
+import { escapeRegexLiteral } from '../common/utils/escape-regex';
 import type {
   CreateUserInput,
   PaginatedUser,
@@ -47,15 +48,17 @@ export class UserService {
 
   getUsers(input: PaginateUserInput): Promise<PaginatedUser> {
     const { page, limit, search, ...rest } = input;
+    const searchTerm = search?.trim();
+    const safePattern = searchTerm ? escapeRegexLiteral(searchTerm) : '';
 
     const query = {
-      ...(search && {
+      ...(safePattern && {
         $or: [
-          { firstName: { $regex: search, $options: 'i' } },
-          { lastName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-          { username: { $regex: search, $options: 'i' } },
-          { phone: { $regex: search, $options: 'i' } },
+          { firstName: { $regex: safePattern, $options: 'i' } },
+          { lastName: { $regex: safePattern, $options: 'i' } },
+          { email: { $regex: safePattern, $options: 'i' } },
+          { username: { $regex: safePattern, $options: 'i' } },
+          { phone: { $regex: safePattern, $options: 'i' } },
         ],
       }),
       ...this.queryBuilder(rest),

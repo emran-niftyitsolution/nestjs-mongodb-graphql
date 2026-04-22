@@ -20,7 +20,7 @@ export class UserResolver {
     return this.userService.create(input);
   }
 
-  @Query(() => User, { nullable: true })
+  @Query(() => User)
   async getUser(@Args('input') input: GetUserInput): Promise<User | null> {
     const user = await this.userService.getUser(input);
     if (!user) {
