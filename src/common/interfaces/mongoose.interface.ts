@@ -10,5 +10,5 @@ export interface PaginateResult<T> {
   prevPage?: number | null;
   nextPage?: number | null;
   pagingCounter: number;
-  meta?: any;
+  meta?: unknown;
 }

@@ -14,6 +14,7 @@ declare const module: {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap', { timestamp: true });
+  const port = Number(process.env.PORT ?? 3000);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -49,12 +50,9 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(port);
   logger.log(
-    '-------------------------------------------',
-    `Server is running on port ${process.env.PORT ?? 3000}`,
-    `GraphQL playground: http://localhost:${process.env.PORT ?? 3000}/graphql`,
-    '-------------------------------------------',
+    `Server is running on port ${port}; GraphQL endpoint: http://localhost:${port}/graphql`,
   );
 
   if (module.hot) {

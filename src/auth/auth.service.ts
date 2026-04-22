@@ -1,15 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import type { ConfigService } from '@nestjs/config';
+import type { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { UserService } from '../user/user.service';
-import {
+import type { UserService } from '../user/user.service';
+import type {
   LoginInput,
   LoginResponse,
   RefreshTokenInput,
   SignupInput,
 } from './dtos/auth.input';
-import { JwtPayload, Tokens } from './interfaces/jwt.interface';
+import type { JwtPayload, Tokens } from './interfaces/jwt.interface';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +26,7 @@ export class AuthService {
         email: input.email,
       },
       {
-        secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
+        secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
         expiresIn: '1d',
       },
     );
@@ -34,7 +34,7 @@ export class AuthService {
     const refreshToken = this.jwtService.sign(
       { sub: input.sub, email: input.email },
       {
-        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+        secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
         expiresIn: '7d',
       },
     );
@@ -71,8 +71,11 @@ export class AuthService {
 
   async refreshToken(input: RefreshTokenInput): Promise<LoginResponse> {
     try {
+      const refreshTokenSecret = this.configService.getOrThrow<string>(
+        'REFRESH_TOKEN_SECRET',
+      );
       const payload = this.jwtService.verify<JwtPayload>(input.refreshToken, {
-        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+        secret: refreshTokenSecret,
       });
       const user = await this.userService.getUser({ _id: payload.sub });
       if (!user) throw new UnauthorizedException('Invalid refresh token');

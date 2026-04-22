@@ -1,12 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { detailedDiff, DetailedDiff } from 'deep-object-diff';
-import { Document, Model, Schema } from 'mongoose';
+import { type DetailedDiff, detailedDiff } from 'deep-object-diff';
+import type { Document, Model, Schema } from 'mongoose';
 import { RequestContext } from 'nestjs-request-context';
 import {
   ActivityLog,
-  ActivityLogDocument,
+  type ActivityLogDocument,
 } from './schemas/activity-logs.schema';
 
 export enum LogActionType {
@@ -43,7 +42,6 @@ export class ActivityLogService {
   constructor(
     @InjectModel(ActivityLog.name)
     private readonly activityLogModel: Model<ActivityLogDocument>,
-    @Inject(ModuleRef) private readonly moduleRef: ModuleRef,
   ) {
     ActivityLogService.instance = this;
   }
@@ -137,7 +135,7 @@ export class ActivityLogService {
       id &&
       typeof id === 'object' &&
       id !== null &&
-      Object.prototype.hasOwnProperty.call(id, '$oid') &&
+      Object.hasOwn(id, '$oid') &&
       typeof (id as { $oid?: unknown }).$oid === 'string'
     ) {
       return (id as { $oid: string }).$oid;
@@ -204,7 +202,7 @@ export class ActivityLogService {
   async preSchema(
     query: Record<string, unknown>,
     updatedObject: Record<string, unknown>,
-    model: Model<any>,
+    model: Model<Document>,
   ): Promise<void> {
     try {
       const keys = Object.keys(updatedObject ?? {}).filter(
@@ -460,7 +458,7 @@ export class ActivityLogService {
     });
 
     // Post-save hook
-    schema.post('save', async function (doc: Document, next) {
+    schema.post('save', async (doc: Document, next) => {
       try {
         const cacheKey = doc._id?.toString() ?? '';
 

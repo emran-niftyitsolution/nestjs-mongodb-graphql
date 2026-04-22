@@ -1,9 +1,9 @@
 import {
   registerDecorator,
-  ValidationArguments,
-  ValidationOptions,
+  type ValidationArguments,
+  type ValidationOptions,
   ValidatorConstraint,
-  ValidatorConstraintInterface,
+  type ValidatorConstraintInterface,
 } from 'class-validator';
 
 /**
@@ -22,11 +22,11 @@ export class IsNotBlankConstraint implements ValidatorConstraintInterface {
 }
 
 export function IsNotBlank(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string) {
+  return (object: object, propertyName: string) => {
     registerDecorator({
       target: object.constructor,
       propertyName,
-      options: validationOptions,
+      ...(validationOptions ? { options: validationOptions } : {}),
       validator: IsNotBlankConstraint,
     });
   };

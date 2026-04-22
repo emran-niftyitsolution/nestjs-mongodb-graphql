@@ -3,12 +3,12 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { User } from '../../user/schema/user.schema';
-import { UserService } from '../../user/user.service';
-import { JwtPayload } from '../interfaces/jwt.interface';
+import type { User } from '../../user/schema/user.schema';
+import type { UserService } from '../../user/user.service';
+import type { JwtPayload } from '../interfaces/jwt.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -16,7 +16,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
   ) {
-    const secret = configService.get<string>('ACCESS_TOKEN_SECRET');
+    const secret = configService.getOrThrow<string>('ACCESS_TOKEN_SECRET');
     if (!secret) {
       throw new InternalServerErrorException(
         'ACCESS_TOKEN_SECRET is not defined in configuration',
@@ -29,7 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload): Promise<User | null> {
+  override async validate(payload: JwtPayload): Promise<User> {
     const user = await this.userService.getUser({
       _id: payload.sub,
     });

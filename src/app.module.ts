@@ -1,16 +1,19 @@
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { Request, Response } from 'express';
-import { GraphQLError } from 'graphql';
-import { Connection } from 'mongoose';
-import * as mongoosePaginateV2 from 'mongoose-paginate-v2';
-import * as mongooseUniqueValidator from 'mongoose-unique-validator';
+import type { Request, Response } from 'express';
+import type { GraphQLFormattedError } from 'graphql';
+import type { Connection } from 'mongoose';
+
+import mongoosePaginateV2 = require('mongoose-paginate-v2');
+
+import mongooseUniqueValidator = require('mongoose-unique-validator');
+
 import { RequestContextModule } from 'nestjs-request-context';
 import { ActivityLogModule } from './activity-logs/activity-logs.module';
 import { ActivityLogService } from './activity-logs/activity-logs.service';
@@ -21,28 +24,75 @@ import { GqlAuthGuard } from './common/guards/gql-auth.guard';
 import { GqlThrottlerGuard } from './common/guards/graphq-throttler.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TrimPipe } from './common/pipes/trim.pipe';
+import { validateEnv } from './config/env.validation';
 import { UserModule } from './user/user.module';
+
+interface GraphQLContext {
+  req: Request;
+  res: Response;
+}
+
+interface GraphQLAppError extends GraphQLFormattedError {
+  error: string;
+  status: string;
+  statusCode: number | null;
+}
+
+function landingPagePlugin(): NonNullable<
+  ApolloDriverConfig['plugins']
+>[number] {
+  // Bridge CJS/ESM private-type mismatch for Apollo plugin types under strict mode.
+  return ApolloServerPluginLandingPageLocalDefault() as unknown as NonNullable<
+    ApolloDriverConfig['plugins']
+  >[number];
+}
+
+function getOriginalErrorDetails(error: unknown): {
+  message?: string;
+  statusCode?: number;
+} {
+  if (typeof error !== 'object' || error === null) {
+    return {};
+  }
+
+  const originalError = error as {
+    message?: unknown;
+    statusCode?: unknown;
+  };
+
+  return {
+    ...(typeof originalError.message === 'string'
+      ? { message: originalError.message }
+      : {}),
+    ...(typeof originalError.statusCode === 'number'
+      ? { statusCode: originalError.statusCode }
+      : {}),
+  };
+}
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      cache: true,
+      expandVariables: true,
+      validate: validateEnv,
     }),
     RequestContextModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
+        uri: configService.getOrThrow<string>('MONGODB_URI'),
         onConnectionCreate: (connection: Connection) => {
           const logger = new Logger('MongoDB', { timestamp: true });
           const dbName = configService
-            .get<string>('MONGODB_URI')
+            .getOrThrow<string>('MONGODB_URI')
             ?.split('/')
             .pop();
 
           connection.on('connected', () =>
-            logger.log('MongoDB connected to ' + dbName),
+            logger.log(`MongoDB connected to ${dbName}`),
           );
           connection.on('open', () => logger.log('MongoDB open'));
           connection.on('disconnected', () =>
@@ -68,35 +118,20 @@ import { UserModule } from './user/user.module';
       playground: false,
       autoSchemaFile: true,
       sortSchema: true,
-      plugins: [ApolloServerPluginLandingPageLocalDefault() as any],
-      context: ({
-        req,
-        res,
-      }: {
-        req: Request;
-        res: Response;
-      }): { req: Request; res: Response } => ({ req, res }),
-      formatError: (error: GraphQLError) => {
-        const { extensions, message, path } = error;
-        const formattedError = {
-          path,
-          error: message,
-          message:
-            typeof extensions?.originalError === 'object' &&
-            extensions?.originalError !== null &&
-            'message' in extensions.originalError
-              ? (extensions.originalError as { message?: string }).message ||
-                message
-              : message,
-          status: extensions?.code || 'INTERNAL_SERVER_ERROR',
-          statusCode:
-            typeof extensions?.originalError === 'object' &&
-            extensions?.originalError !== null &&
-            'statusCode' in extensions.originalError
-              ? (extensions.originalError as { statusCode?: number }).statusCode
-              : null,
+      plugins: [landingPagePlugin()],
+      context: ({ req, res }: GraphQLContext): GraphQLContext => ({ req, res }),
+      formatError: (formattedError, error): GraphQLAppError => {
+        const details = getOriginalErrorDetails(error);
+
+        return {
+          ...formattedError,
+          error: details.message ?? formattedError.message,
+          message: details.message ?? formattedError.message,
+          status: formattedError.extensions?.code
+            ? String(formattedError.extensions.code)
+            : 'INTERNAL_SERVER_ERROR',
+          statusCode: details.statusCode ?? null,
         };
-        return formattedError;
       },
     }),
     ThrottlerModule.forRoot({

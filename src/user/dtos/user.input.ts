@@ -18,8 +18,8 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { Types } from 'mongoose';
-import { PaginatedType } from 'src/common/objecttypes/pagination';
+import type { Types } from 'mongoose';
+import { PaginatedType } from '../../common/objecttypes/pagination';
 import { User } from '../schema/user.schema';
 
 @InputType()
@@ -61,7 +61,7 @@ export class CreateUserInput extends OmitType(User, [
   })
   @IsString()
   @IsNotEmpty()
-  password: string;
+  password!: string;
 }
 
 @InputType()
@@ -78,7 +78,7 @@ export class UpdateUserInput extends PartialType(
   @IsMongoId()
   @IsNotEmpty()
   @Field(() => ID)
-  _id: Types.ObjectId;
+  _id!: Types.ObjectId;
 
   @MaxLength(32)
   @MinLength(8)
@@ -92,7 +92,7 @@ export class UpdateUserInput extends PartialType(
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  password?: string;
+  override password?: string;
 }
 
 @InputType()

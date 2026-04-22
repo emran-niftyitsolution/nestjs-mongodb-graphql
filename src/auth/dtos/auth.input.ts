@@ -7,34 +7,34 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { User } from '../../user/schema/user.schema';
+import type { User } from '../../user/schema/user.schema';
 
 @InputType()
 export class LoginInput {
   @IsEmail()
   @IsString()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty()
-  password: string;
+  password!: string;
 }
 
 @InputType()
 export class SignupInput {
   @IsString()
   @IsNotEmpty()
-  firstName: string;
+  firstName!: string;
 
   @IsString()
   @IsNotEmpty()
-  lastName: string;
+  lastName!: string;
 
   @IsEmail()
   @IsString()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @IsStrongPassword({
     minLength: 8,
@@ -47,19 +47,19 @@ export class SignupInput {
   @MinLength(8)
   @IsString()
   @IsNotEmpty()
-  password: string;
+  password!: string;
 }
 
 @ObjectType()
 export class LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: User;
+  accessToken!: string;
+  refreshToken!: string;
+  user!: User;
 }
 
 @InputType()
 export class RefreshTokenInput {
   @IsString()
   @IsNotEmpty()
-  refreshToken: string;
+  refreshToken!: string;
 }

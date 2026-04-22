@@ -17,7 +17,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
+import { type HydratedDocument, SchemaTypes, type Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -62,27 +62,27 @@ export class User {
   @IsString()
   @IsNotEmpty()
   @Field(() => ID)
-  _id: Types.ObjectId;
+  _id!: Types.ObjectId;
 
   @MaxLength(20)
   @MinLength(2)
   @IsString()
   @IsNotEmpty()
   @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
-  firstName: string;
+  firstName!: string;
 
   @MaxLength(20)
   @MinLength(2)
   @IsString()
   @IsNotEmpty()
   @Prop({ required: true, minlength: 2, maxlength: 20, trim: true })
-  lastName: string;
+  lastName!: string;
 
   @IsEmail()
   @IsString()
   @IsNotEmpty()
   @Prop({ required: true, unique: true, trim: true, lowercase: true })
-  email: string;
+  email!: string;
 
   @IsString()
   @IsOptional()
@@ -97,7 +97,7 @@ export class User {
 
   @HideField()
   @Prop({ required: true, minlength: 8, trim: true })
-  password: string;
+  password!: string;
 
   @IsString()
   @IsNotEmpty()

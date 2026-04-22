@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as argon2 from 'argon2';
-import { PaginateModel, Types } from 'mongoose';
-import {
+import type { PaginateModel, Types } from 'mongoose';
+import type {
   CreateUserInput,
   PaginatedUser,
   PaginateUserInput,
   UpdateUserInput,
 } from './dtos/user.input';
-import { User, UserDocument } from './schema/user.schema';
+import { User, type UserDocument } from './schema/user.schema';
 @Injectable()
 export class UserService {
   constructor(
@@ -64,7 +64,7 @@ export class UserService {
     return this.userModel.paginate(query, {
       page: page || 1,
       limit: limit || 10,
-    });
+    }) as Promise<PaginatedUser>;
   }
 
   async updateUser(
