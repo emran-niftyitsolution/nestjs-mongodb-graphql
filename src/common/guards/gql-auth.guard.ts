@@ -1,5 +1,5 @@
 import { type ExecutionContext, Injectable } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { AuthGuard } from '@nestjs/passport';
 import { OPTIONAL_AUTH_KEY } from '../decorators/optional-auth.decorator';
