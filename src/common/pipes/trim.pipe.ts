@@ -41,7 +41,7 @@ export class TrimPipe implements PipeTransform {
     ) {
       const result = {} as DeepTrim<T>;
       for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
+        if (Object.hasOwn(value, key)) {
           (result as Record<string, unknown>)[key] = this.deepTrim(
             (value as Record<string, unknown>)[key],
           );
