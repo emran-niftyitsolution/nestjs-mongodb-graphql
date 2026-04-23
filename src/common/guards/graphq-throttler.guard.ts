@@ -5,6 +5,9 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 @Injectable()
 export class GqlThrottlerGuard extends ThrottlerGuard {
   override getRequestResponse(context: ExecutionContext) {
+    if (context.getType() === 'http') {
+      return super.getRequestResponse(context);
+    }
     const ctx = GqlExecutionContext.create(context);
     const gqlCtx = ctx.getContext<{ req: Request; res: Response }>();
     return { req: gqlCtx.req, res: gqlCtx.res };

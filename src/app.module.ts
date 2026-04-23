@@ -25,6 +25,8 @@ import { GqlThrottlerGuard } from './common/guards/graphq-throttler.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TrimPipe } from './common/pipes/trim.pipe';
 import { validateEnv } from './config/env.validation';
+import metadata from './metadata';
+// Serializes GraphQL code-first field metadata (Nest CLI + SWC). See: https://docs.nestjs.com/graphql/cli-plugin#swc-builder
 import { UserModule } from './user/user.module';
 
 interface GraphQLContext {
@@ -115,6 +117,7 @@ function getOriginalErrorDetails(error: unknown): {
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
+      metadata,
       playground: false,
       autoSchemaFile: true,
       sortSchema: true,
