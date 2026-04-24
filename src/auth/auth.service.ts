@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { Types } from 'mongoose';
+import type { AppEnv } from '../config/env.validation';
 import { UserService } from '../user/user.service';
 import type {
   LoginInput,
@@ -17,7 +18,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<AppEnv, true>,
   ) {}
 
   private getTokens(input: JwtPayload): Tokens {
@@ -27,16 +28,16 @@ export class AuthService {
         email: input.email,
       },
       {
-        secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
-        expiresIn: '1d',
+        secret: this.configService.getOrThrow('ACCESS_TOKEN_SECRET'),
+        expiresIn: this.configService.getOrThrow('ACCESS_TOKEN_EXPIRES_IN'),
       },
     );
 
     const refreshToken = this.jwtService.sign(
       { sub: input.sub, email: input.email },
       {
-        secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
-        expiresIn: '7d',
+        secret: this.configService.getOrThrow('REFRESH_TOKEN_SECRET'),
+        expiresIn: this.configService.getOrThrow('REFRESH_TOKEN_EXPIRES_IN'),
       },
     );
 
@@ -72,7 +73,7 @@ export class AuthService {
 
   async refreshToken(input: RefreshTokenInput): Promise<LoginResponse> {
     try {
-      const refreshTokenSecret = this.configService.getOrThrow<string>(
+      const refreshTokenSecret = this.configService.getOrThrow(
         'REFRESH_TOKEN_SECRET',
       );
       const payload = this.jwtService.verify<JwtPayload>(input.refreshToken, {

@@ -24,7 +24,7 @@ import { GqlAuthGuard } from './common/guards/gql-auth.guard';
 import { GqlThrottlerGuard } from './common/guards/graphq-throttler.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TrimPipe } from './common/pipes/trim.pipe';
-import { validateEnv } from './config/env.validation';
+import { type AppEnv, validateEnv } from './config/env.validation';
 import { UserModule } from './user/user.module';
 
 interface GraphQLContext {
@@ -72,7 +72,7 @@ function getOriginalErrorDetails(error: unknown): {
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
+    ConfigModule.forRoot<AppEnv>({
       isGlobal: true,
       cache: true,
       expandVariables: true,
@@ -82,12 +82,12 @@ function getOriginalErrorDetails(error: unknown): {
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.getOrThrow<string>('MONGODB_URI'),
+      useFactory: (configService: ConfigService<AppEnv, true>) => ({
+        uri: configService.getOrThrow('MONGODB_URI'),
         onConnectionCreate: (connection: Connection) => {
           const logger = new Logger('MongoDB', { timestamp: true });
           const dbName = configService
-            .getOrThrow<string>('MONGODB_URI')
+            .getOrThrow('MONGODB_URI')
             ?.split('/')
             .pop();
 

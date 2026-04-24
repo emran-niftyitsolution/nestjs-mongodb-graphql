@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Types } from 'mongoose';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import type { AppEnv } from '../../config/env.validation';
 import type { User } from '../../user/schema/user.schema';
 import { UserService } from '../../user/user.service';
 import type { JwtPayload } from '../interfaces/jwt.interface';
@@ -14,10 +15,10 @@ import type { JwtPayload } from '../interfaces/jwt.interface';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<AppEnv, true>,
     private readonly userService: UserService,
   ) {
-    const secret = configService.getOrThrow<string>('ACCESS_TOKEN_SECRET');
+    const secret = configService.getOrThrow('ACCESS_TOKEN_SECRET');
     if (!secret) {
       throw new InternalServerErrorException(
         'ACCESS_TOKEN_SECRET is not defined in configuration',
