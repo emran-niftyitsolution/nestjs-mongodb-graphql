@@ -20,6 +20,9 @@ export class UserSession {
   @Prop({ required: true, select: false })
   refreshTokenHash!: string;
 
+  @Prop({ type: Date, required: true, index: true })
+  expiresAt!: Date;
+
   @Prop({ trim: true, maxlength: 200 })
   userAgent?: string;
 
@@ -44,4 +47,9 @@ export const UserSessionSchema = SchemaFactory.createForClass(UserSession);
 UserSessionSchema.index(
   { userId: 1, revokedAt: 1, updatedAt: -1 },
   { name: 'userId_revoked_updated' },
+);
+
+UserSessionSchema.index(
+  { expiresAt: 1 },
+  { expireAfterSeconds: 0, name: 'ttl_expiresAt' },
 );

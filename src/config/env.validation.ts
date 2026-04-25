@@ -14,6 +14,11 @@ export interface AppEnv {
   REFRESH_TOKEN_SECRET: string;
   ACCESS_TOKEN_EXPIRES_IN: JwtExpiresIn;
   REFRESH_TOKEN_EXPIRES_IN: JwtExpiresIn;
+  /**
+   * Maximum number of active (non-revoked, non-expired) sessions per user.
+   * Extra sessions are revoked (oldest first) on login/signup.
+   */
+  MAX_ACTIVE_SESSIONS_PER_USER: number;
 }
 
 function pick(config: Record<string, unknown>, key: keyof AppEnv): unknown {
@@ -47,6 +52,21 @@ function port(value: unknown): number {
   const n = Number(value);
   if (!Number.isInteger(n) || n <= 0 || n > 65535) {
     throw new Error('Environment variable PORT must be a valid port number');
+  }
+  return n;
+}
+
+function positiveIntWithDefault(
+  value: unknown,
+  key: keyof AppEnv,
+  defaultValue: number,
+): number {
+  if (value === undefined || value === null || value === '') {
+    return defaultValue;
+  }
+  const n = Number(value);
+  if (!Number.isInteger(n) || n <= 0) {
+    throw new Error(`Environment variable ${key} must be a positive integer`);
   }
   return n;
 }
@@ -121,6 +141,11 @@ export function validateEnv(config: Record<string, unknown>): AppEnv {
     REFRESH_TOKEN_EXPIRES_IN: jwtExpiresIn(
       pick(config, 'REFRESH_TOKEN_EXPIRES_IN'),
       'REFRESH_TOKEN_EXPIRES_IN',
+    ),
+    MAX_ACTIVE_SESSIONS_PER_USER: positiveIntWithDefault(
+      pick(config, 'MAX_ACTIVE_SESSIONS_PER_USER'),
+      'MAX_ACTIVE_SESSIONS_PER_USER',
+      20,
     ),
   };
 }

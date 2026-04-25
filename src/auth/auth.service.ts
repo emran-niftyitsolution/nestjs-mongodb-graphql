@@ -7,7 +7,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import dayjs from 'dayjs';
 import { Types } from 'mongoose';
+
+// CJS `module.exports = fn` — default import compiles to `.default` and breaks at runtime.
+import ms = require('ms');
+
+import { REQUEST_MESSAGES } from '../common/constants/request-messages.constants';
 import { extractBearer } from '../common/utils/extract-bearer.util';
 import type { AppEnv } from '../config/env.validation';
 import { User } from '../user/schema/user.schema';
@@ -68,6 +74,21 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  private computeRefreshExpiryDate(): Date {
+    const expiresIn = this.configService.getOrThrow('REFRESH_TOKEN_EXPIRES_IN');
+    if (typeof expiresIn === 'number') {
+      return dayjs().add(expiresIn, 'second').toDate();
+    }
+    const parsed = (ms as unknown as (input: string) => number | undefined)(
+      String(expiresIn),
+    );
+    if (parsed === undefined || !Number.isFinite(parsed) || parsed <= 0) {
+      // Env is validated, so this should never happen in practice.
+      return dayjs().toDate();
+    }
+    return dayjs().add(parsed, 'millisecond').toDate();
+  }
+
   private async openSessionWithTokens(
     user: User,
     sessionMeta?: SessionClientMeta,
@@ -75,11 +96,17 @@ export class AuthService {
     const newSessionId = new Types.ObjectId();
     const userClaims = { sub: user._id.toString(), email: user.email };
     const tokens = this.getTokens(userClaims, newSessionId.toString());
+    const refreshExpiresAt = this.computeRefreshExpiryDate();
     await this.sessionService.createForLogin(
       newSessionId,
       user._id,
       tokens.refreshToken,
+      refreshExpiresAt,
       sessionMeta,
+    );
+    await this.sessionService.revokeOldestActiveSessionsBeyondLimit(
+      user._id,
+      this.configService.getOrThrow('MAX_ACTIVE_SESSIONS_PER_USER'),
     );
     return { ...tokens, user };
   }
@@ -89,11 +116,12 @@ export class AuthService {
     sessionMeta?: SessionClientMeta,
   ): Promise<LoginResponse> {
     const user = await this.userService.getUser({ email: input.email });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user)
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_CREDENTIALS);
 
     const passwordMatches = await argon2.verify(user.password, input.password);
     if (!passwordMatches) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_CREDENTIALS);
     }
 
     return this.openSessionWithTokens(
@@ -137,16 +165,16 @@ export class AuthService {
         },
       );
     } catch {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_REFRESH_TOKEN);
     }
     if (!Types.ObjectId.isValid(refreshTokenPayload.sub)) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_REFRESH_TOKEN);
     }
     if (
       !refreshTokenPayload.sessionId ||
       !Types.ObjectId.isValid(refreshTokenPayload.sessionId)
     ) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_REFRESH_TOKEN);
     }
     const userObjectId = new Types.ObjectId(refreshTokenPayload.sub);
     const sessionObjectId = new Types.ObjectId(refreshTokenPayload.sessionId);
@@ -155,29 +183,33 @@ export class AuthService {
       userObjectId,
     );
     if (!activeSession) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_REFRESH_TOKEN);
     }
     const clientRefreshTokenMatchesStoredHash = await argon2.verify(
       activeSession.refreshTokenHash,
       input.refreshToken,
     );
     if (!clientRefreshTokenMatchesStoredHash) {
-      throw new UnauthorizedException('Invalid refresh token');
+      await this.sessionService.revoke(sessionObjectId, userObjectId);
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_REFRESH_TOKEN);
     }
     const user = await this.userService.getUser({ _id: userObjectId });
-    if (!user) throw new UnauthorizedException('Invalid refresh token');
+    if (!user)
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_REFRESH_TOKEN);
 
     const tokens = this.getTokens(
       { sub: user._id.toString(), email: user.email },
       sessionObjectId.toString(),
     );
+    const refreshExpiresAt = this.computeRefreshExpiryDate();
     const refreshHashWasUpdated = await this.sessionService.setRefreshTokenHash(
       sessionObjectId,
       userObjectId,
       tokens.refreshToken,
+      refreshExpiresAt,
     );
     if (!refreshHashWasUpdated) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_REFRESH_TOKEN);
     }
     return { ...tokens, user };
   }
@@ -188,7 +220,7 @@ export class AuthService {
   ): Promise<LogoutResult> {
     const accessTokenString = extractBearer(authorization);
     if (!accessTokenString) {
-      throw new UnauthorizedException('Missing access token');
+      throw new UnauthorizedException(REQUEST_MESSAGES.MISSING_ACCESS_TOKEN);
     }
     const accessTokenSecret = this.configService.getOrThrow(
       'ACCESS_TOKEN_SECRET',
@@ -202,16 +234,16 @@ export class AuthService {
         },
       );
     } catch {
-      throw new UnauthorizedException('Invalid access token');
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_ACCESS_TOKEN);
     }
     if (accessTokenPayload.sub !== user._id.toString()) {
-      throw new UnauthorizedException('Invalid access token');
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_ACCESS_TOKEN);
     }
     if (
       !accessTokenPayload.sessionId ||
       !Types.ObjectId.isValid(accessTokenPayload.sessionId)
     ) {
-      throw new UnauthorizedException('Invalid access token');
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_ACCESS_TOKEN);
     }
     await this.sessionService.revoke(
       new Types.ObjectId(accessTokenPayload.sessionId),
@@ -231,7 +263,7 @@ export class AuthService {
     ) {
       assertSuperAdmin(user);
       if (!Types.ObjectId.isValid(targetUserIdToSignOutAllSessions)) {
-        throw new NotFoundException('User not found');
+        throw new NotFoundException(REQUEST_MESSAGES.USER_NOT_FOUND);
       }
       await this.sessionService.revokeAllForUser(
         new Types.ObjectId(targetUserIdToSignOutAllSessions),
@@ -255,10 +287,10 @@ export class AuthService {
       const trimmedOtherUserId = otherUserIdForAdminsToView.trim();
       if (trimmedOtherUserId.length > 0) {
         if (!isSuperAdmin(user)) {
-          throw new ForbiddenException('Super admin only');
+          throw new ForbiddenException(REQUEST_MESSAGES.SUPER_ADMIN_ONLY);
         }
         if (!Types.ObjectId.isValid(trimmedOtherUserId)) {
-          throw new NotFoundException('User not found');
+          throw new NotFoundException(REQUEST_MESSAGES.USER_NOT_FOUND);
         }
         sessionsOwnerUserId = new Types.ObjectId(trimmedOtherUserId);
       }
@@ -290,14 +322,14 @@ export class AuthService {
     input: RevokeSessionInput,
   ): Promise<LogoutResult> {
     if (!Types.ObjectId.isValid(input.sessionId)) {
-      throw new NotFoundException('Session not found');
+      throw new NotFoundException(REQUEST_MESSAGES.SESSION_NOT_FOUND);
     }
     const sessionToRevokeId = new Types.ObjectId(input.sessionId);
     const sessionWasRevoked = isSuperAdmin(user)
       ? await this.sessionService.revokeBySessionIdGlobal(sessionToRevokeId)
       : await this.sessionService.revoke(sessionToRevokeId, user._id);
     if (!sessionWasRevoked) {
-      throw new NotFoundException('Session not found');
+      throw new NotFoundException(REQUEST_MESSAGES.SESSION_NOT_FOUND);
     }
     return { success: true };
   }
