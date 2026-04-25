@@ -1,8 +1,10 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import type { AppEnv } from './config/env.validation';
 
 declare const module: {
   hot?: {
@@ -14,7 +16,8 @@ declare const module: {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap', { timestamp: true });
-  const port = Number(process.env.PORT ?? 3000);
+  const configService = app.get(ConfigService<AppEnv, true>);
+  const port = configService.getOrThrow('PORT');
 
   app.useGlobalPipes(
     new ValidationPipe({

@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { REQUEST_MESSAGES } from '../common/constants/request-messages.constants';
 import {
   CreateUserInput,
   GetUserInput,
@@ -24,7 +25,7 @@ export class UserResolver {
   async getUser(@Args('input') input: GetUserInput): Promise<User | null> {
     const user = await this.userService.getUser(input);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(REQUEST_MESSAGES.USER_NOT_FOUND);
     }
     return user;
   }

@@ -11,6 +11,7 @@ When adding a **new Nest module**, **GraphQL resolver**, **REST controller**, or
 1. **Read and follow this file** (`.agents/CODEBASE.md`) for layout, global guards, env, tooling, and pitfalls.
 2. **Mirror existing modules** as the primary template — especially **`user/`** (resolver + service + `forFeature` schema + DTOs) and **`auth/`** (resolver + service + strategy + module wiring). Match naming (`*.resolver.ts`, `*.service.ts`, `*.module.ts`), decorator usage (`@Public()`, `@Roles()` where appropriate), and how `AppModule` imports and orders providers.
 3. After changes, align with repo tooling: **`biome check`**, **`nest build`**, and the sections **Tooling (agents: do not break)** and **Pitfalls for automated edits** later in this file.
+4. **Name things for people:** use human-readable variables and identifiers — see [Naming: human-readable variables and identifiers](#naming-human-readable-variables-and-identifiers).
 
 Do not invent a parallel structure (e.g. a different folder layout or auth pattern) unless this document is updated to match.
 
@@ -195,6 +196,20 @@ Official overview: [NestJS GraphQL CLI plugin](https://docs.nestjs.com/graphql/c
 - **JWT:** access + refresh; payload `JwtPayload.sub` is **string** (JSON); DB lookups use `Types.ObjectId.isValid` + `new Types.ObjectId(sub)` where needed.
 - **User model:** Mongoose schema colocated with GraphQL types; enum registration via `registerEnumType`.
 - **getUser query:** returns **`null`** if not found (nullable field), does not throw.
+
+---
+
+## Naming: human-readable variables and identifiers
+
+Code in this repo should read clearly to humans reviewing and maintaining it, not just to the compiler.
+
+- **Prefer full, descriptive names** over cryptic abbreviations. Favor `sessionId`, `accessToken`, `isSuperAdmin` over `sid`, `at`, `sup` unless the project already standardizes a short form (e.g. `id` in GraphQL DTOs where context is obvious).
+- **Booleans** should sound like questions or state: `isEnabled`, `hasPassword`, `canEdit`, not `flag` or `ok`.
+- **Functions and methods** are verbs or verb phrases: `buildSessionMetadata`, `resolveUser`, not `data` or `process`.
+- **Single-letter names** (`i`, `e`, `x`) are only for very small scopes (e.g. a simple index in a one-line callback). Even then, prefer a word when it clarifies meaning (`err` in a catch is acceptable; `user` is better than `u` in a resolver).
+- **Match existing modules** for the same concept (`userId` vs `userID`): pick the dominant spelling in the file you are editing, not a new variant.
+
+When in doubt, mirror **User** and **auth** services and DTOs in this repository.
 
 ---
 
