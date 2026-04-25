@@ -99,6 +99,14 @@ export class User {
   @Prop({ required: true, minlength: 8, trim: true })
   password!: string;
 
+  @HideField()
+  @Prop({ type: String, required: false })
+  passwordResetTokenHash?: string;
+
+  @HideField()
+  @Prop({ type: Date, required: false })
+  passwordResetTokenExpiresAt?: Date;
+
   @IsString()
   @IsNotEmpty()
   @IsOptional()

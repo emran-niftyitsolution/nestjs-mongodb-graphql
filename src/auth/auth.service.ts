@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from 'node:crypto';
 import {
   ForbiddenException,
   Injectable,
@@ -19,11 +20,16 @@ import type { AppEnv } from '../config/env.validation';
 import { User } from '../user/schema/user.schema';
 import { UserService } from '../user/user.service';
 import type {
+  ChangePasswordInput,
   LoginInput,
   LoginResponse,
   LogoutAllInput,
   LogoutResult,
+  PasswordChangeResult,
+  PasswordResetRequestResult,
   RefreshTokenInput,
+  RequestPasswordResetInput,
+  ResetPasswordInput,
   RevokeSessionInput,
   SignupInput,
   UserSessionListEntry,
@@ -331,6 +337,70 @@ export class AuthService {
     if (!sessionWasRevoked) {
       throw new NotFoundException(REQUEST_MESSAGES.SESSION_NOT_FOUND);
     }
+    return { success: true };
+  }
+
+  async changePassword(
+    user: User,
+    input: ChangePasswordInput,
+  ): Promise<PasswordChangeResult> {
+    const freshUser = await this.userService.getUser({ _id: user._id });
+    if (!freshUser) {
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_CREDENTIALS);
+    }
+
+    const passwordMatches = await argon2.verify(
+      freshUser.password,
+      input.currentPassword,
+    );
+    if (!passwordMatches) {
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_CREDENTIALS);
+    }
+
+    await this.userService.setPassword(freshUser._id, input.newPassword);
+    await this.userService.clearPasswordResetToken(freshUser._id);
+    await this.sessionService.revokeAllForUser(freshUser._id);
+    return { success: true };
+  }
+
+  async requestPasswordReset(
+    input: RequestPasswordResetInput,
+  ): Promise<PasswordResetRequestResult> {
+    const user = await this.userService.getUser({ email: input.email });
+    if (!user) {
+      return { success: true };
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const expiresAt = dayjs().add(60, 'minute').toDate();
+    await this.userService.setPasswordResetToken(
+      user._id,
+      tokenHash,
+      expiresAt,
+    );
+
+    return { success: true, resetToken: token };
+  }
+
+  async resetPassword(
+    input: ResetPasswordInput,
+  ): Promise<PasswordChangeResult> {
+    const tokenHash = createHash('sha256').update(input.token).digest('hex');
+    const user = await this.userService.getUser({
+      passwordResetTokenHash: tokenHash,
+    });
+    if (
+      !user ||
+      user.passwordResetTokenExpiresAt?.getTime() === undefined ||
+      user.passwordResetTokenExpiresAt.getTime() < Date.now()
+    ) {
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_CREDENTIALS);
+    }
+
+    await this.userService.setPassword(user._id, input.newPassword);
+    await this.userService.clearPasswordResetToken(user._id);
+    await this.sessionService.revokeAllForUser(user._id);
     return { success: true };
   }
 }

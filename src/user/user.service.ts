@@ -27,6 +27,9 @@ export class UserService {
       ...(user.gender && { gender: user.gender }),
       ...(user.status && { status: user.status }),
       ...(user.role && { role: user.role }),
+      ...(user.passwordResetTokenHash && {
+        passwordResetTokenHash: user.passwordResetTokenHash,
+      }),
     };
 
     return query;
@@ -86,6 +89,44 @@ export class UserService {
       id,
       { status: 'DELETED' },
       { new: true },
+    );
+  }
+
+  async setPasswordResetToken(
+    id: Types.ObjectId,
+    tokenHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: id },
+      {
+        $set: {
+          passwordResetTokenHash: tokenHash,
+          passwordResetTokenExpiresAt: expiresAt,
+        },
+      },
+    );
+  }
+
+  async clearPasswordResetToken(id: Types.ObjectId): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: id },
+      {
+        $unset: {
+          passwordResetTokenHash: 1,
+          passwordResetTokenExpiresAt: 1,
+        },
+      },
+    );
+  }
+
+  async setPassword(id: Types.ObjectId, newPassword: string): Promise<void> {
+    const hashedPassword = await argon2.hash(newPassword);
+    await this.userModel.updateOne(
+      { _id: id },
+      {
+        $set: { password: hashedPassword },
+      },
     );
   }
 }

@@ -5,11 +5,16 @@ import type { GqlExpressRequestContext } from '../common/interfaces/gql-express-
 import { User } from '../user/schema/user.schema';
 import { AuthService } from './auth.service';
 import {
+  ChangePasswordInput,
   LoginInput,
   LoginResponse,
   LogoutAllInput,
   LogoutResult,
+  PasswordChangeResult,
+  PasswordResetRequestResult,
   RefreshTokenInput,
+  RequestPasswordResetInput,
+  ResetPasswordInput,
   RevokeSessionInput,
   SignupInput,
   UserSessionListEntry,
@@ -50,6 +55,36 @@ export class AuthResolver {
     @Args('input') input: RefreshTokenInput,
   ): Promise<LoginResponse> {
     return this.authService.refreshToken(input);
+  }
+
+  @Mutation(() => PasswordChangeResult, {
+    description: 'Change password for the current user (requires login)',
+  })
+  changePassword(
+    @CurrentUser() user: User,
+    @Args('input') input: ChangePasswordInput,
+  ): Promise<PasswordChangeResult> {
+    return this.authService.changePassword(user, input);
+  }
+
+  @Public()
+  @Mutation(() => PasswordResetRequestResult, {
+    description: 'Request a password reset token by email',
+  })
+  requestPasswordReset(
+    @Args('input') input: RequestPasswordResetInput,
+  ): Promise<PasswordResetRequestResult> {
+    return this.authService.requestPasswordReset(input);
+  }
+
+  @Public()
+  @Mutation(() => PasswordChangeResult, {
+    description: 'Reset password using a valid reset token',
+  })
+  resetPassword(
+    @Args('input') input: ResetPasswordInput,
+  ): Promise<PasswordChangeResult> {
+    return this.authService.resetPassword(input);
   }
 
   @Mutation(() => LogoutResult, { description: 'Log out the current device' })

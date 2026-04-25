@@ -1,6 +1,7 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { REQUEST_MESSAGES } from '../common/constants/request-messages.constants';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import {
   CreateUserInput,
   GetUserInput,
@@ -15,6 +16,14 @@ import { UserService } from './user.service';
 @Resolver(() => User)
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
+
+  @Query(() => User, { description: 'Get my profile (requires login)' })
+  myProfile(@CurrentUser() user: User | null): User {
+    if (!user) {
+      throw new UnauthorizedException(REQUEST_MESSAGES.INVALID_TOKEN);
+    }
+    return user;
+  }
 
   @Mutation(() => User)
   createUser(@Args('input') input: CreateUserInput): Promise<User> {

@@ -100,6 +100,20 @@ export default async () => {
               isCurrent: {},
             },
             RevokeSessionInput: { sessionId: {} },
+            ChangePasswordInput: {
+              currentPassword: { type: () => String },
+              newPassword: { type: () => String },
+            },
+            RequestPasswordResetInput: { email: { type: () => String } },
+            ResetPasswordInput: {
+              token: { type: () => String },
+              newPassword: { type: () => String },
+            },
+            PasswordResetRequestResult: {
+              success: {},
+              resetToken: { nullable: true },
+            },
+            PasswordChangeResult: { success: {} },
           },
         ],
       ],

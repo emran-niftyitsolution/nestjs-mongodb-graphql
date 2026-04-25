@@ -136,3 +136,70 @@ export class RevokeSessionInput {
   @IsNotEmpty()
   sessionId!: string;
 }
+
+@InputType()
+export class ChangePasswordInput {
+  @IsString()
+  @IsNotEmpty()
+  currentPassword!: string;
+
+  @IsStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 1,
+  })
+  @MaxLength(32)
+  @MinLength(8)
+  @IsString()
+  @IsNotEmpty()
+  newPassword!: string;
+}
+
+@InputType()
+export class RequestPasswordResetInput {
+  @IsEmail()
+  @IsString()
+  @IsNotEmpty()
+  email!: string;
+}
+
+@InputType()
+export class ResetPasswordInput {
+  @IsString()
+  @IsNotEmpty()
+  token!: string;
+
+  @IsStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 1,
+  })
+  @MaxLength(32)
+  @MinLength(8)
+  @IsString()
+  @IsNotEmpty()
+  newPassword!: string;
+}
+
+@ObjectType()
+export class PasswordResetRequestResult {
+  @Field()
+  success!: boolean;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      'For development/testing. In production, email this token instead of returning it.',
+  })
+  resetToken?: string;
+}
+
+@ObjectType()
+export class PasswordChangeResult {
+  @Field()
+  success!: boolean;
+}
