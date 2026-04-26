@@ -2,8 +2,8 @@ import { defineConfig } from 'vitest/config';
 
 /**
  * E2E tests import `../dist/*` (built with `nest build`).
- * The Nest GraphQL code-first **compiler plugin** (see `nest-cli.json` + [Nest SWC](https://docs.nestjs.com/recipes/swc))
- * only runs in the Nest/TS build pipeline, not in Vitest’s test transform — so tests must not load GraphQL
+ * The Nest GraphQL code-first **compiler plugin** (see `nest-cli.json`)
+ * only runs in the Nest build pipeline, not in Vitest’s test transform — so tests must not load GraphQL
  * from raw `src/` for a full `AppModule` bootstrap.
  */
 export default defineConfig({

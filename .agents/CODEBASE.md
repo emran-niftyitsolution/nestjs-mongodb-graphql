@@ -107,7 +107,7 @@ AppModule
 ├── RequestContextModule
 ├── MongooseModule.forRootAsync
 │   └── connection plugins: mongoose-paginate-v2, mongoose-unique-validator, ActivityLogService.apply
-├── GraphQLModule (code-first, `metadata` from `./metadata` for [SWC + plugin](https://docs.nestjs.com/graphql/cli-plugin#swc-builder), autoSchemaFile, formatError)
+├── GraphQLModule (code-first, autoSchemaFile, formatError)
 ├── ThrottlerModule
 ├── ActivityLogModule  → exports ActivityLogService
 ├── UserModule         → exports UserService
@@ -240,9 +240,7 @@ When in doubt, mirror **User** and **auth** services and DTOs in this repository
 | `package.json` → `lint-staged` | `biome check --write` with `--no-errors-on-unmatched` + `--files-ignore-unknown=true` on staged `*.{ts,js,json,md}`. |
 | `.husky/pre-commit` | `lint-staged` then `bun run build` (or equivalent from package). |
 | `tsconfig.json` | `strict`, `emitDecoratorMetadata`, `experimentalDecorators`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `skipLibCheck`. |
-| `nest-cli.json` | **`builder`: `"swc"`** + **`typeCheck`: true** per [SWC](https://docs.nestjs.com/recipes/swc); **`@nestjs/graphql` plugin** — see [Nest CLI: GraphQL compiler plugin](#nest-cli-graphql-compiler-plugin). |
-| `.swcrc` | SWC: `legacyDecorator` + `decoratorMetadata` for Nest (matches TS `emitDecoratorMetadata`). |
-| `src/metadata.ts` | [GraphQL SWC + plugin](https://docs.nestjs.com/graphql/cli-plugin#swc-builder): re-generated on `nest build` — **import** in `app.module` as `metadata: graphQLMetadata`. **Commit** this file when it changes. |
+| `nest-cli.json` | **`@nestjs/graphql` compiler plugin** — see [Nest CLI: GraphQL compiler plugin](#nest-cli-graphql-compiler-plugin). |
 | `vitest.config.ts` | [Vitest](https://vitest.dev/); tests run after `nest build` in `package.json` for metadata/DTO sync. |
 | `webpack-hmr.config.js` | Used by `bun run dev` / HMR. |
 
